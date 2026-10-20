@@ -1,0 +1,24 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource/bebas-neue';
+@import 'tailwindcss';
+
+/* Cinema theme, from the Figma mockups: each variable becomes a Tailwind utility (bg-night, text-cream, ...). */
+@theme {
+  --color-night: #0c0d0f;
+  --color-surface: #141518;
+  --color-cream: #f3f0e9;
+  --color-muted: #aba9a5;
+  --color-subtle: #777779;
+  --color-line: #343438;
+  --color-field: #c6c6c8;
+  --color-brand: #c52d3b;
+
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-display: 'Bebas Neue', 'Arial Narrow', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-surface font-sans text-cream antialiased;
+  }
+}

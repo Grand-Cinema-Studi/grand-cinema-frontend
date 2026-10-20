@@ -1,0 +1,9 @@
+# Generated or locked files
+package-lock.json
+/dist
+/coverage
+/.angular
+
+# Documentation keeps the hand-written style shared with the other repositories
+*.md
+!CONTRIBUTING.md

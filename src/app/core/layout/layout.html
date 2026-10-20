@@ -1,0 +1,49 @@
+<div class="flex min-h-dvh flex-col">
+  <header class="border-b border-line bg-night md:border-white/15">
+    <div
+      class="mx-auto flex h-19 w-full max-w-360 items-center justify-between px-5 md:h-26 md:px-16"
+    >
+      <a
+        routerLink="/"
+        class="font-display text-[32px] leading-none whitespace-nowrap uppercase md:text-[42px]"
+      >
+        Grand Cinéma
+      </a>
+      <a
+        routerLink="/"
+        class="flex h-11 items-center gap-2.25 rounded-[3px] bg-brand px-3 text-[10px] font-semibold whitespace-nowrap hover:brightness-110 md:h-12.5 md:gap-5 md:px-6 md:text-[13px]"
+      >
+        Acheter un billet
+        <img src="icons/ticket-mobile.svg" alt="" width="15" height="15" class="md:hidden" />
+        <img src="icons/ticket.svg" alt="" width="17" height="17" class="hidden md:block" />
+      </a>
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <router-outlet />
+  </main>
+
+  <footer class="bg-night">
+    <div
+      class="mx-auto flex w-full max-w-360 flex-col gap-8 px-5 pt-10 pb-7 md:gap-11 md:px-16 md:pt-15"
+    >
+      <div class="flex flex-col gap-3 md:gap-3.25">
+        <p class="font-display text-[34px] leading-none whitespace-nowrap uppercase md:text-[42px]">
+          Grand Cinéma
+        </p>
+        <p class="text-xs text-muted">Voyez le monde autrement.</p>
+      </div>
+
+      <div class="h-px bg-line"></div>
+
+      <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <p class="text-[10px] text-subtle">© 2026 Grand Cinéma. Tous droits réservés.</p>
+        <p class="hidden items-center gap-2 text-[10px] text-muted uppercase md:flex">
+          <span class="size-1.25 bg-brand" aria-hidden="true"></span>
+          Ville Le Grand Cinema
+        </p>
+      </div>
+    </div>
+  </footer>
+</div>

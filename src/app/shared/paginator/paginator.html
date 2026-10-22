@@ -1,0 +1,47 @@
+@if (pageCount() > 1) {
+  <nav aria-label="Pagination" class="flex items-center justify-center gap-2 md:gap-3">
+    <button
+      type="button"
+      aria-label="Page précédente"
+      [disabled]="page() === 1"
+      (click)="go(page() - 1)"
+      class="flex size-11 items-center justify-center disabled:opacity-30"
+    >
+      <img src="icons/arrow-left.svg" alt="" width="20" height="20" />
+    </button>
+    <ul class="flex items-center gap-1 md:gap-2">
+      @for (item of items(); track $index) {
+        <li>
+          @if (item === '…') {
+            <span class="flex size-11 items-center justify-center text-xs text-muted">…</span>
+          } @else {
+            <button
+              type="button"
+              [attr.data-page]="item"
+              [attr.aria-current]="item === page() ? 'page' : null"
+              [attr.aria-label]="'Page ' + item"
+              (click)="go(item)"
+              class="flex size-11 items-center justify-center rounded-[3px] text-xs"
+              [class]="
+                item === page()
+                  ? 'bg-cream font-semibold text-night'
+                  : 'text-muted hover:text-cream'
+              "
+            >
+              {{ item }}
+            </button>
+          }
+        </li>
+      }
+    </ul>
+    <button
+      type="button"
+      aria-label="Page suivante"
+      [disabled]="page() === pageCount()"
+      (click)="go(page() + 1)"
+      class="flex size-11 items-center justify-center disabled:opacity-30"
+    >
+      <img src="icons/arrow-right.svg" alt="" width="20" height="20" />
+    </button>
+  </nav>
+}

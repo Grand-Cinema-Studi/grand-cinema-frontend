@@ -1,0 +1,42 @@
+<section
+  id="movies"
+  class="mx-auto flex w-full max-w-360 scroll-mt-4 flex-col gap-6 px-5 py-12 md:gap-8 md:px-16 md:pt-20 md:pb-22"
+>
+  <div class="flex flex-col gap-3 border-b border-line pb-5 md:gap-4">
+    <p class="flex items-center gap-2 md:gap-2.5">
+      <span class="text-[11px] text-brand md:text-xs" aria-hidden="true">◆</span>
+      <span class="text-[9px] font-semibold uppercase md:text-[11px]">
+        Au moins une séance à venir
+      </span>
+    </p>
+    <h1 class="font-display text-5xl leading-none uppercase md:text-7xl">Tous les films</h1>
+  </div>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="text-muted">Chargement des films…</p>
+    }
+    @case ('failed') {
+      <p role="alert" class="text-muted">
+        Les films sont momentanément indisponibles. Réessayez dans quelques instants.
+      </p>
+    }
+    @default {
+      <ul class="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-6 md:gap-y-12">
+        @for (movie of pageMovies(); track movie.movieId) {
+          <li>
+            <app-movie-card
+              [title]="movie.title"
+              [posterUrl]="movie.posterUrl"
+              [genre]="movie.genre"
+              [durationMinutes]="movie.durationMinutes"
+            />
+          </li>
+        } @empty {
+          <li class="col-span-full text-muted">Aucun film n'est à l'affiche pour le moment.</li>
+        }
+      </ul>
+      <app-paginator [page]="page()" [pageCount]="pageCount()" (pageChange)="choosePage($event)" />
+    }
+  }
+</section>

@@ -1,0 +1,103 @@
+@let featured = movie();
+<section
+  aria-roledescription="carrousel"
+  aria-label="Films à la une"
+  class="relative isolate flex min-h-[calc(100dvh-4.75rem)] flex-col overflow-hidden bg-night md:min-h-[calc(100dvh-6.5rem)] lg:h-[calc(100dvh-6.5rem)] lg:min-h-150"
+>
+  <!-- The carousel fills the screen below the header when the page opens (dvh: the height really visible on mobile).
+       Mobile and tablet: the whole poster across the width, fading to black under the texts -->
+  <img
+    [src]="featured.posterUrl"
+    alt=""
+    class="absolute inset-x-0 top-0 -z-20 h-auto w-full lg:hidden"
+  />
+  <div
+    class="absolute inset-0 -z-10 bg-linear-to-b from-night/15 via-night/70 via-45% to-night lg:hidden"
+  ></div>
+
+  <div
+    class="mx-auto flex w-full max-w-360 flex-1 flex-col px-5 md:px-16 lg:grid lg:min-h-0 lg:grid-cols-2 lg:gap-12"
+  >
+    <div
+      aria-live="polite"
+      class="mt-auto flex flex-col gap-4.5 pt-51 pb-7 lg:mt-0 lg:justify-center lg:gap-5.75 lg:pt-0 lg:pb-16"
+    >
+      <p class="flex items-center gap-2 lg:gap-2.5">
+        <span class="text-[11px] text-brand lg:text-xs" aria-hidden="true">◆</span>
+        <span class="text-[9px] font-semibold uppercase lg:text-[11px]">
+          Un monde à part. À un écran de vous.
+        </span>
+      </p>
+      <h2
+        class="font-display uppercase"
+        [class]="
+          longTitle()
+            ? 'text-[56px] leading-[0.9] lg:text-[104px] lg:leading-[0.89]'
+            : 'text-[88px] leading-[0.9] lg:text-[156px] lg:leading-[0.89]'
+        "
+      >
+        {{ featured.title }}
+      </h2>
+      <p class="flex items-center gap-3 text-[11px] lg:gap-4 lg:text-[13px]">
+        <span>{{ featured.genre }}</span>
+        <span aria-hidden="true">·</span>
+        <span>{{ featured.durationMinutes | runtime }}</span>
+      </p>
+      <p class="line-clamp-3 max-w-102.5 text-sm leading-[1.65] text-mist lg:text-base">
+        {{ featured.synopsis }}
+      </p>
+      <div class="flex gap-2.5 lg:gap-3">
+        <button
+          type="button"
+          class="flex h-12.5 flex-1 items-center justify-center gap-3.5 rounded-[3px] bg-brand px-4.5 text-[13px] font-semibold hover:brightness-110 lg:flex-none lg:gap-5 lg:px-6"
+        >
+          Réserver
+          <img
+            src="icons/action-arrow-mobile.svg"
+            alt=""
+            width="16.5"
+            height="16.5"
+            class="lg:hidden"
+          />
+          <img src="icons/action-arrow.svg" alt="" width="17" height="17" class="hidden lg:block" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Desktop: the whole poster, never cropped, in the right half, against the right margin,
+         slightly darkened from its left edge (mask over the black background):
+         it keeps the same place whatever the length of the title -->
+    <div class="hidden min-h-0 justify-end pt-12 pb-24 lg:flex">
+      <img
+        [src]="featured.posterUrl"
+        alt=""
+        class="h-full w-auto max-w-full rounded-[3px] mask-[linear-gradient(to_right,rgba(0,0,0,0.01),black_90%)] object-contain"
+      />
+    </div>
+  </div>
+
+  <div
+    class="mx-auto flex w-full max-w-360 items-center justify-between px-5 pb-8 md:px-16 lg:absolute lg:inset-x-0 lg:bottom-12 lg:pb-0"
+  >
+    <p class="hidden text-[11px] font-semibold text-cream/60 uppercase lg:block">
+      Un monde à part. À un écran de vous.
+    </p>
+    <div class="flex w-full items-center justify-between gap-3.5 lg:w-auto">
+      <p class="flex items-center gap-3 text-[11px] lg:gap-3.5 lg:text-xs">
+        <span>{{ position(index() + 1) }}</span>
+        <span class="relative h-0.5 w-14.5 bg-line lg:w-17.5" aria-hidden="true">
+          <span class="absolute inset-y-0 left-0 bg-brand" [style.width.%]="progress()"></span>
+        </span>
+        <span class="text-muted">{{ position(movies().length) }}</span>
+      </p>
+      <p class="flex items-center gap-4 lg:gap-3.5">
+        <button type="button" aria-label="Film précédent" (click)="previous()">
+          <img src="icons/arrow-left.svg" alt="" width="20" height="20" />
+        </button>
+        <button type="button" aria-label="Film suivant" (click)="next()">
+          <img src="icons/arrow-right.svg" alt="" width="20" height="20" />
+        </button>
+      </p>
+    </div>
+  </div>
+</section>

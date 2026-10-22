@@ -1,0 +1,51 @@
+<section
+  aria-labelledby="cinema-experience-title"
+  class="mx-auto grid max-w-360 px-5 pb-12 md:px-16 md:pb-22 lg:min-h-162.5 lg:grid-cols-[760fr_680fr]"
+>
+  <figure class="relative h-82.5 overflow-hidden rounded-[3px] lg:h-auto">
+    <img
+      src="images/cinema-interior.jpg"
+      alt="Une salle du Grand Cinéma : l'écran et les rangées de fauteuils rouges"
+      loading="lazy"
+      class="size-full object-cover"
+    />
+    <figcaption
+      class="absolute bottom-6 left-5 flex items-center gap-3 text-[9px] uppercase lg:bottom-7 lg:left-8 lg:gap-3.5 lg:text-[10px]"
+    >
+      Screen 01 / The Grand
+      <span class="h-px w-12 bg-brand lg:w-20" aria-hidden="true"></span>
+    </figcaption>
+  </figure>
+
+  <div class="flex flex-col justify-center gap-6 pt-9 lg:py-16 lg:pl-16">
+    <p class="flex items-center gap-2 lg:gap-2.5">
+      <span class="text-[11px] text-brand lg:text-xs" aria-hidden="true">◆</span>
+      <span
+        class="text-[9px] leading-[1.6] font-semibold uppercase lg:text-[11px] lg:leading-normal"
+      >
+        Bien plus qu'un film. Une émotion à vivre.
+      </span>
+    </p>
+    <h2
+      id="cinema-experience-title"
+      class="font-display text-[54px] leading-[0.98] uppercase lg:text-[80px]"
+    >
+      Le cinéma,<br />en plus intense.
+    </h2>
+    <p class="text-sm leading-[1.7] text-muted lg:text-[15px]">
+      Laissez-vous emporter par les détails. Du premier murmure à la dernière image, chaque élément
+      du Grand Cinéma est conçu pour vous plonger au cœur de l'histoire.
+    </p>
+    <ul class="flex flex-col gap-6 lg:gap-4.5 lg:py-2">
+      @for (promise of promises; track promise.title) {
+        <li class="flex items-center gap-4">
+          <img [src]="promise.icon" alt="" width="25" height="25" class="shrink-0" />
+          <p class="flex flex-col gap-1.5 lg:gap-1.25">
+            <span class="text-xs leading-normal lg:text-[13px]">{{ promise.title }}</span>
+            <span class="text-[11px] text-muted">{{ promise.detail }}</span>
+          </p>
+        </li>
+      }
+    </ul>
+  </div>
+</section>

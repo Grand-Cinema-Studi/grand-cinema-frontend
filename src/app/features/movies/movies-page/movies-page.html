@@ -1,5 +1,6 @@
 <section
-  class="mx-auto flex w-full max-w-360 flex-col gap-6 px-5 py-12 md:gap-8 md:px-16 md:pt-20 md:pb-22"
+  id="movies"
+  class="mx-auto flex w-full max-w-360 scroll-mt-4 flex-col gap-6 px-5 py-12 md:gap-8 md:px-16 md:pt-20 md:pb-22"
 >
   <div class="flex flex-col gap-3 border-b border-line pb-5 md:gap-4">
     <p class="flex items-center gap-2 md:gap-2.5">
@@ -21,8 +22,8 @@
       </p>
     }
     @default {
-      <ul class="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-x-6 md:gap-y-12">
-        @for (movie of movies(); track movie.movieId) {
+      <ul class="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-6 md:gap-y-12">
+        @for (movie of pageMovies(); track movie.movieId) {
           <li>
             <app-movie-card
               [title]="movie.title"
@@ -35,6 +36,7 @@
           <li class="col-span-full text-muted">Aucun film n'est à l'affiche pour le moment.</li>
         }
       </ul>
+      <app-paginator [page]="page()" [pageCount]="pageCount()" (pageChange)="choosePage($event)" />
     }
   }
 </section>

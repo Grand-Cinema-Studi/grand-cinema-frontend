@@ -96,13 +96,16 @@ src/
     │   └── not-found/      page « introuvable » (toute adresse inconnue)
     ├── shared/             réutilisé par plusieurs écrans
     │   ├── movie-card/     carte d'un film (affiche, titre, genre, durée)
+    │   ├── paginator/      pagination des listes (6 films par page)
     │   └── runtime.pipe.ts durée d'un film (« 2h 06m »)
     └── features/           un dossier par fonctionnalité
-        ├── schedule/       US 1.1 : programmation d'un jour (accueil, /)
+        ├── schedule/       US 1.1 : accueil (/) : films à la une, recherche de séance, programmation d'un jour
+        ├── cinema/         présentation des salles (section statique de l'accueil)
         └── movies/         US 1.1 : films à l'affiche (/movies)
 public/
 ├── favicon.ico
-└── icons/                  icônes de la maquette (copiées telles quelles dans le build)
+├── icons/                  icônes de la maquette (copiées telles quelles dans le build)
+└── images/                 photos de la maquette (salle de cinéma)
 ```
 
 - Rangement **par fonctionnalité**, comme le backend : une user story ne touche, en principe, qu'un dossier de `features/`.
@@ -118,8 +121,8 @@ public/
 
 | User story | Écran | API | État |
 |---|---|---|---|
-| US 1.1 | Programmation d'un jour (`/`) : films et séances (heure, salle), choix du jour parmi les 7 prochains, filtre par genre | `GET /api/schedule?date=` | ✅ |
-| US 1.1 | Tous les films à l'affiche (`/movies`) | `GET /api/movies` | ✅ |
+| US 1.1 | Accueil (`/`) : carrousel des films à la une (4 premiers films du jour), barre « Votre prochaine évasion » (date, film), programmation d'un jour : films et séances (heure, salle), choix du jour parmi les 7 prochains, filtre par genre, 6 films par page | `GET /api/schedule?date=` | ✅ |
+| US 1.1 | Tous les films à l'affiche (`/movies`), 6 films par page | `GET /api/movies` | ✅ |
 
 Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 

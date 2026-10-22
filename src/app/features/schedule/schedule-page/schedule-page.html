@@ -1,5 +1,20 @@
+@if (featured().length) {
+  <app-featured-movies id="featured" class="block" [movies]="featured()" />
+}
+
+@if (days().length) {
+  <app-quick-booking
+    [days]="days()"
+    [selectedDay]="selectedDay()"
+    [movies]="dayMovies()"
+    (dayChange)="chooseDay($event)"
+    (find)="find($event)"
+  />
+}
+
 <section
-  class="mx-auto flex w-full max-w-360 flex-col gap-6 px-5 py-12 md:gap-8 md:px-16 md:pt-20 md:pb-22"
+  id="schedule"
+  class="mx-auto flex w-full max-w-360 scroll-mt-4 flex-col gap-6 px-5 py-12 md:gap-8 md:px-16 md:pt-20 md:pb-22"
 >
   <div class="flex flex-col gap-3 md:gap-4">
     <p class="flex items-center gap-2 md:gap-2.5">
@@ -43,14 +58,7 @@
             : ''
         "
       >
-        @if (first) {
-          Aujourd'hui
-          @if (day === selectedDay()) {
-            , {{ day | date: 'd MMM' }}
-          }
-        } @else {
-          {{ day | date: 'EEE d' }}
-        }
+        {{ dayLabel(day, first) }}
       </button>
     }
 
@@ -59,6 +67,7 @@
     >
       <span class="sr-only">Genre</span>
       <select
+        name="genre"
         [value]="genre()"
         (change)="chooseGenre($any($event.target).value)"
         class="appearance-none bg-transparent pr-5 text-xs md:pr-7 [&>option]:bg-night"
@@ -95,9 +104,9 @@
       </p>
     }
     @default {
-      <ul class="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-x-6 md:gap-y-12">
-        @for (movie of movies(); track movie.movieId) {
-          <li>
+      <ul class="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-6 md:gap-y-12">
+        @for (movie of pageMovies(); track movie.movieId) {
+          <li [id]="'movie-' + movie.movieId" class="scroll-mt-4">
             <app-movie-card
               [title]="movie.title"
               [posterUrl]="movie.posterUrl"
@@ -124,6 +133,9 @@
           <li class="col-span-full text-muted">Aucune séance n'est programmée ce jour-là.</li>
         }
       </ul>
+      <app-paginator [page]="page()" [pageCount]="pageCount()" (pageChange)="choosePage($event)" />
     }
   }
 </section>
+
+<app-cinema-experience id="cinema" class="block" />

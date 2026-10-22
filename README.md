@@ -89,13 +89,17 @@ src/
 ├── styles.css              Tailwind, polices et thème du cinéma (couleurs de la maquette)
 └── app/
     ├── app.ts              composant racine, affiche la mise en page
-    ├── app.config.ts       providers globaux : routeur, HttpClient
+    ├── app.config.ts       providers globaux : routeur, HttpClient, affichage en français
     ├── app.routes.ts       routes, chargées à la demande (loadComponent)
     ├── core/               éléments techniques communs
     │   ├── layout/         en-tête, zone des pages, pied de page (structure de la maquette)
     │   └── not-found/      page « introuvable » (toute adresse inconnue)
-    ├── shared/             composants réutilisables (créé avec le premier)
-    └── features/<feature>/ un dossier par fonctionnalité (créé avec la première story)
+    ├── shared/             réutilisé par plusieurs écrans
+    │   ├── movie-card/     carte d'un film (affiche, titre, genre, durée)
+    │   └── runtime.pipe.ts durée d'un film (« 2h 06m »)
+    └── features/           un dossier par fonctionnalité
+        ├── schedule/       US 1.1 : programmation d'un jour (accueil, /)
+        └── movies/         US 1.1 : films à l'affiche (/movies)
 public/
 ├── favicon.ico
 └── icons/                  icônes de la maquette (copiées telles quelles dans le build)
@@ -112,7 +116,12 @@ public/
 
 ## État
 
-Le squelette est en place (mise en page, page « introuvable », outillage, intégration continue). Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
+| User story | Écran | API | État |
+|---|---|---|---|
+| US 1.1 | Programmation d'un jour (`/`) : films et séances (heure, salle), choix du jour parmi les 7 prochains, filtre par genre | `GET /api/schedule?date=` | ✅ |
+| US 1.1 | Tous les films à l'affiche (`/movies`) | `GET /api/movies` | ✅ |
+
+Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 
 ## Branches et contributions
 

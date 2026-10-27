@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  push:
+    branches: [dev] # every merge into dev updates the acceptance environment
+  workflow_dispatch:
+
+permissions: {} # nothing by default: the job asks for what it needs
+
+concurrency:
+  group: deploy-recette
+  cancel-in-progress: false # a deployment in progress is never interrupted
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: recette
+    permissions:
+      contents: read
+      id-token: write # OIDC token, exchanged for temporary AWS credentials
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run test:ci
+      - run: npm run build
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Publish to S3
+        env:
+          BUCKET: ${{ vars.FRONT_BUCKET }}
+          BUILD_DIR: dist/grand-cinema-frontend/browser
+        run: |
+          # Files with a hash in their name: new content means a new name, so they are cached for one year
+          aws s3 sync "$BUILD_DIR" "s3://$BUCKET" --delete \
+            --exclude index.html --exclude favicon.ico --exclude "icons/*" --exclude "images/*" \
+            --cache-control "public, max-age=31536000, immutable"
+          # Files without a hash: revalidated on every visit
+          aws s3 sync "$BUILD_DIR" "s3://$BUCKET" \
+            --exclude "*" --include index.html --include favicon.ico --include "icons/*" --include "images/*" \
+            --cache-control "no-cache"
+
+      - name: Invalidate the CloudFront cache
+        env:
+          DISTRIBUTION_ID: ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: aws cloudfront create-invalidation --distribution-id "$DISTRIBUTION_ID" --paths "/*" --query Invalidation.Id --output text
+
+      - name: Check the site through CloudFront
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 "$SITE_URL/" > /dev/null
+          # An Angular route must serve the application page, not an error
+          curl --fail --silent --show-error --retry 5 --retry-delay 5 "$SITE_URL/schedule" > /dev/null

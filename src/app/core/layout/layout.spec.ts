@@ -2,15 +2,28 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { User } from '../auth/models/auth';
 import { Layout } from './layout';
 
 describe('Layout', () => {
-  async function render(signedIn = false): Promise<HTMLElement> {
+  const lea: User = {
+    userId: 'id-lea',
+    email: 'lea.martin@example.com',
+    firstName: 'Léa',
+    lastName: 'Martin',
+    role: 'Customer',
+  };
+
+  async function render(user: User | null = null): Promise<HTMLElement> {
     TestBed.configureTestingModule({
       imports: [Layout],
       providers: [
         provideRouter([]),
-        { provide: AuthService, useValue: { isSignedIn: signal(signedIn) } },
+        // Same signals as AuthService: the signed-in user, or null
+        {
+          provide: AuthService,
+          useValue: { user: signal(user), isSignedIn: signal(user !== null) },
+        },
       ],
     });
     const fixture = TestBed.createComponent(Layout);
@@ -67,17 +80,18 @@ describe('Layout', () => {
   });
 
   it('when the visitor is signed out, then the header leads to the sign-in page', async () => {
-    const element = await render(false);
+    const element = await render(null);
 
     const link = element.querySelector<HTMLAnchorElement>('header a[href="/sign-in"]');
     expect(link?.textContent?.trim()).toBe('Connexion');
   });
 
-  it('when the visitor is signed in, then the header leads to the account page', async () => {
-    const element = await render(true);
+  it('when the visitor is signed in, then the header shows the first name and leads to the account page', async () => {
+    const element = await render(lea);
 
     const link = element.querySelector<HTMLAnchorElement>('header a[href="/account"]');
-    expect(link?.textContent?.trim()).toBe('Mon compte');
+    // "Mon compte :" is only read by screen readers: the visible text is the first name
+    expect(link?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Mon compte : Léa');
     expect(element.querySelector('header a[href="/sign-in"]')).toBeNull();
   });
 });

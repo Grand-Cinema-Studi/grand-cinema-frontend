@@ -10,12 +10,13 @@
         Grand Cinéma
       </a>
       <div class="flex items-center gap-4 md:gap-8">
-        @if (auth.isSignedIn()) {
+        @if (auth.user(); as user) {
           <a
             routerLink="/account"
-            class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+            [title]="user.firstName"
+            class="block max-w-24 truncate text-[10px] font-semibold uppercase hover:text-muted md:max-w-48 md:text-[13px]"
           >
-            Mon compte
+            <span class="sr-only">Mon compte : </span>{{ user.firstName }}
           </a>
         } @else {
           <a

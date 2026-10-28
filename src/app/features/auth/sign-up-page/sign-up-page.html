@@ -1,0 +1,112 @@
+<section class="mx-auto flex w-full max-w-md flex-col gap-8 px-5 py-12 md:py-20">
+  <div class="flex flex-col gap-3">
+    <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">Créer un compte</h1>
+    <p class="text-sm text-muted">Pour réserver vos places et retrouver vos billets.</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="flex flex-col gap-5">
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1.5">
+        <label for="firstName" class="text-xs font-semibold uppercase">Prénom</label>
+        <input
+          id="firstName"
+          formControlName="firstName"
+          autocomplete="given-name"
+          class="h-11 rounded-[3px] border border-line bg-night px-3 focus:border-cream focus:outline-none"
+        />
+        @if (showsError(form.controls.firstName)) {
+          <p class="text-xs text-brand">Le prénom est obligatoire.</p>
+        }
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="lastName" class="text-xs font-semibold uppercase">Nom</label>
+        <input
+          id="lastName"
+          formControlName="lastName"
+          autocomplete="family-name"
+          class="h-11 rounded-[3px] border border-line bg-night px-3 focus:border-cream focus:outline-none"
+        />
+        @if (showsError(form.controls.lastName)) {
+          <p class="text-xs text-brand">Le nom est obligatoire.</p>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="email" class="text-xs font-semibold uppercase">Adresse e-mail</label>
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+        class="h-11 rounded-[3px] border border-line bg-night px-3 focus:border-cream focus:outline-none"
+      />
+      @if (showsError(form.controls.email)) {
+        <p class="text-xs text-brand">Saisissez une adresse e-mail valide.</p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="password" class="text-xs font-semibold uppercase">Mot de passe</label>
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        autocomplete="new-password"
+        aria-describedby="password-rule"
+        class="h-11 rounded-[3px] border border-line bg-night px-3 focus:border-cream focus:outline-none"
+      />
+      <p
+        id="password-rule"
+        [class]="showsError(form.controls.password) ? 'text-xs text-brand' : 'text-xs text-muted'"
+      >
+        12 caractères minimum.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <div class="flex items-start gap-3 text-sm">
+        <input
+          id="acceptPrivacyPolicy"
+          type="checkbox"
+          formControlName="acceptPrivacyPolicy"
+          class="mt-0.5 size-4 shrink-0 accent-brand"
+        />
+        <label for="acceptPrivacyPolicy">
+          J'ai lu et j'accepte la
+          <a
+            routerLink="/privacy-policy"
+            target="_blank"
+            rel="noopener"
+            class="underline hover:text-cream"
+          >
+            politique de confidentialité
+          </a>
+          (nouvel onglet).
+        </label>
+      </div>
+      @if (showsError(form.controls.acceptPrivacyPolicy)) {
+        <p class="text-xs text-brand">
+          Vous devez accepter la politique de confidentialité pour créer un compte.
+        </p>
+      }
+    </div>
+
+    @if (error(); as message) {
+      <p role="alert" class="rounded-[3px] border border-brand px-3 py-2 text-sm">{{ message }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="sending()"
+      class="flex h-12.5 items-center justify-center rounded-[3px] bg-brand text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
+    >
+      Créer mon compte
+    </button>
+  </form>
+
+  <p class="text-sm text-muted">
+    Déjà un compte ?
+    <a routerLink="/sign-in" class="text-cream underline">Se connecter</a>
+  </p>
+</section>

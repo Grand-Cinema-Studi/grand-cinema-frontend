@@ -1,10 +1,31 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
+import { User } from '../auth/models/auth';
 import { Layout } from './layout';
 
 describe('Layout', () => {
-  async function render(): Promise<HTMLElement> {
-    TestBed.configureTestingModule({ imports: [Layout], providers: [provideRouter([])] });
+  const lea: User = {
+    userId: 'id-lea',
+    email: 'lea.martin@example.com',
+    firstName: 'Léa',
+    lastName: 'Martin',
+    role: 'Customer',
+  };
+
+  async function render(user: User | null = null): Promise<HTMLElement> {
+    TestBed.configureTestingModule({
+      imports: [Layout],
+      providers: [
+        provideRouter([]),
+        // Same signals as AuthService: the signed-in user, or null
+        {
+          provide: AuthService,
+          useValue: { user: signal(user), isSignedIn: signal(user !== null) },
+        },
+      ],
+    });
     const fixture = TestBed.createComponent(Layout);
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
@@ -40,6 +61,7 @@ describe('Layout', () => {
       ['Notre cinéma', '/#cinema'],
       ['Contact', null],
       ['À propos', null],
+      ['Politique de confidentialité', '/privacy-policy'],
     ]);
   });
 
@@ -55,5 +77,21 @@ describe('Layout', () => {
     expect(footer).toContain('Termes & conditions');
     expect(footer).toContain('Cookies');
     expect(footer).toContain('© 2026 Grand Cinéma. Tous droits réservés.');
+  });
+
+  it('when the visitor is signed out, then the header leads to the sign-in page', async () => {
+    const element = await render(null);
+
+    const link = element.querySelector<HTMLAnchorElement>('header a[href="/sign-in"]');
+    expect(link?.textContent?.trim()).toBe('Connexion');
+  });
+
+  it('when the visitor is signed in, then the header shows the first name and leads to the account page', async () => {
+    const element = await render(lea);
+
+    const link = element.querySelector<HTMLAnchorElement>('header a[href="/account"]');
+    // "Mon compte :" is only read by screen readers: the visible text is the first name
+    expect(link?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Mon compte : Léa');
+    expect(element.querySelector('header a[href="/sign-in"]')).toBeNull();
   });
 });

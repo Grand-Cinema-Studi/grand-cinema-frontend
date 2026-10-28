@@ -9,14 +9,32 @@
       >
         Grand Cinéma
       </a>
-      <a
-        routerLink="/"
-        class="flex h-11 items-center gap-2.25 rounded-[3px] bg-brand px-3 text-[10px] font-semibold whitespace-nowrap hover:brightness-110 md:h-12.5 md:gap-5 md:px-6 md:text-[13px]"
-      >
-        Acheter un billet
-        <img src="icons/ticket-mobile.svg" alt="" width="15" height="15" class="md:hidden" />
-        <img src="icons/ticket.svg" alt="" width="17" height="17" class="hidden md:block" />
-      </a>
+      <div class="flex items-center gap-4 md:gap-8">
+        @if (auth.user(); as user) {
+          <a
+            routerLink="/account"
+            [title]="user.firstName"
+            class="block max-w-24 truncate text-[10px] font-semibold uppercase hover:text-muted md:max-w-48 md:text-[13px]"
+          >
+            <span class="sr-only">Mon compte : </span>{{ user.firstName }}
+          </a>
+        } @else {
+          <a
+            routerLink="/sign-in"
+            class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+          >
+            Connexion
+          </a>
+        }
+        <a
+          routerLink="/"
+          class="flex h-11 items-center gap-2.25 rounded-[3px] bg-brand px-3 text-[10px] font-semibold whitespace-nowrap hover:brightness-110 md:h-12.5 md:gap-5 md:px-6 md:text-[13px]"
+        >
+          Acheter un billet
+          <img src="icons/ticket-mobile.svg" alt="" width="15" height="15" class="md:hidden" />
+          <img src="icons/ticket.svg" alt="" width="17" height="17" class="hidden md:block" />
+        </a>
+      </div>
     </div>
   </header>
 
@@ -72,8 +90,14 @@
 
       <div class="flex flex-col gap-5 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
         <ul class="flex justify-between text-[9px] text-muted md:order-2 md:gap-6 md:text-[10px]">
-          @for (mention of legalMentions; track mention) {
-            <li>{{ mention }}</li>
+          @for (mention of legalMentions; track mention.label) {
+            <li>
+              @if (mention.link) {
+                <a [routerLink]="mention.link" class="hover:text-cream">{{ mention.label }}</a>
+              } @else {
+                {{ mention.label }}
+              }
+            </li>
           }
         </ul>
         <p class="text-[10px] text-subtle md:order-1">© 2026 Grand Cinéma. Tous droits réservés.</p>

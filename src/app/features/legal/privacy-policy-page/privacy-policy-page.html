@@ -1,0 +1,74 @@
+<article
+  class="mx-auto flex w-full max-w-2xl flex-col gap-8 px-5 py-12 text-sm leading-relaxed md:py-20"
+>
+  <header class="flex flex-col gap-3">
+    <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">
+      Politique de confidentialité
+    </h1>
+    <p class="text-muted">Version du {{ version | date: 'longDate' }}</p>
+    <p class="text-muted">
+      Texte de démonstration, établi pour le projet : il reste à valider par la direction du cinéma
+      avant toute mise en production.
+    </p>
+  </header>
+
+  <section class="flex flex-col gap-2">
+    <h2 class="text-xs font-semibold uppercase">Qui traite vos données</h2>
+    <p>
+      Le Grand Cinéma, responsable du traitement. Le site et ses données sont hébergés par Amazon
+      Web Services, dans la région de Paris : vos données restent dans l'Union européenne. Les
+      paiements sont traités par Stripe : vos données de carte ne passent jamais par nos serveurs.
+    </p>
+  </section>
+
+  <section class="flex flex-col gap-2">
+    <h2 class="text-xs font-semibold uppercase">Les données que nous collectons, et pourquoi</h2>
+    <ul class="flex list-disc flex-col gap-1 pl-5">
+      <li>
+        Votre adresse e-mail, votre prénom et votre nom : créer votre compte, vous connecter,
+        retrouver vos billets.
+      </li>
+      <li>
+        Une empreinte de votre mot de passe : vous authentifier. Votre mot de passe lui-même n'est
+        jamais enregistré.
+      </li>
+      <li>Vos réservations : vendre et contrôler vos billets.</li>
+      <li>
+        La date et la version de la présente politique, acceptée à la création de votre compte :
+        pouvoir prouver que vous en avez été informé.
+      </li>
+    </ul>
+    <p>
+      Ces traitements sont nécessaires à l'exécution du service que vous demandez. Aucune autre
+      donnée n'est demandée, et aucune n'est vendue ni utilisée pour de la publicité.
+    </p>
+  </section>
+
+  <section class="flex flex-col gap-2">
+    <h2 class="text-xs font-semibold uppercase">Combien de temps</h2>
+    <p>
+      Votre compte est conservé tant qu'il est utilisé, et supprimé après trois ans sans connexion.
+      Les réservations sont conservées dix ans, durée légale des pièces comptables ; à la
+      suppression de votre compte, elles ne sont plus rattachées à vous.
+    </p>
+  </section>
+
+  <section class="flex flex-col gap-2">
+    <h2 class="text-xs font-semibold uppercase">Vos droits</h2>
+    <p>
+      Vous pouvez consulter vos données et supprimer votre compte à tout moment depuis la page
+      <a routerLink="/account" class="underline">Mon compte</a>. Pour exercer vos autres droits
+      (rectification, portabilité, opposition), écrivez à l'adresse de contact du cinéma. Vous
+      pouvez aussi adresser une réclamation à la CNIL.
+    </p>
+  </section>
+
+  <section class="flex flex-col gap-2">
+    <h2 class="text-xs font-semibold uppercase">Cookies et stockage</h2>
+    <p>
+      Aucun cookie de mesure d'audience ni de publicité. Une fois connecté, votre jeton de connexion
+      est gardé dans le stockage de l'onglet de votre navigateur : il est effacé à la fermeture de
+      l'onglet ou à la déconnexion.
+    </p>
+  </section>
+</article>

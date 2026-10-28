@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 
 interface FooterGroup {
   title: string;
@@ -13,6 +14,8 @@ interface FooterGroup {
   templateUrl: './layout.html',
 })
 export class Layout {
+  protected readonly auth = inject(AuthService);
+
   protected readonly footerGroups: readonly FooterGroup[] = [
     {
       title: 'Nos salles',
@@ -31,9 +34,10 @@ export class Layout {
     { name: 'YouTube', icon: 'icons/youtube.svg' },
   ] as const;
 
-  protected readonly legalMentions = [
-    'Politique de confidentialité',
-    'Termes & conditions',
-    'Cookies',
-  ] as const;
+  /** A mention with a link leads to its page; the others have no page yet. */
+  protected readonly legalMentions: readonly { label: string; link?: string }[] = [
+    { label: 'Politique de confidentialité', link: '/privacy-policy' },
+    { label: 'Termes & conditions' },
+    { label: 'Cookies' },
+  ];
 }

@@ -1,10 +1,18 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 import { Layout } from './layout';
 
 describe('Layout', () => {
-  async function render(): Promise<HTMLElement> {
-    TestBed.configureTestingModule({ imports: [Layout], providers: [provideRouter([])] });
+  async function render(signedIn = false): Promise<HTMLElement> {
+    TestBed.configureTestingModule({
+      imports: [Layout],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { isSignedIn: signal(signedIn) } },
+      ],
+    });
     const fixture = TestBed.createComponent(Layout);
     await fixture.whenStable();
     return fixture.nativeElement as HTMLElement;
@@ -40,6 +48,7 @@ describe('Layout', () => {
       ['Notre cinéma', '/#cinema'],
       ['Contact', null],
       ['À propos', null],
+      ['Politique de confidentialité', '/privacy-policy'],
     ]);
   });
 
@@ -55,5 +64,20 @@ describe('Layout', () => {
     expect(footer).toContain('Termes & conditions');
     expect(footer).toContain('Cookies');
     expect(footer).toContain('© 2026 Grand Cinéma. Tous droits réservés.');
+  });
+
+  it('when the visitor is signed out, then the header leads to the sign-in page', async () => {
+    const element = await render(false);
+
+    const link = element.querySelector<HTMLAnchorElement>('header a[href="/sign-in"]');
+    expect(link?.textContent?.trim()).toBe('Connexion');
+  });
+
+  it('when the visitor is signed in, then the header leads to the account page', async () => {
+    const element = await render(true);
+
+    const link = element.querySelector<HTMLAnchorElement>('header a[href="/account"]');
+    expect(link?.textContent?.trim()).toBe('Mon compte');
+    expect(element.querySelector('header a[href="/sign-in"]')).toBeNull();
   });
 });

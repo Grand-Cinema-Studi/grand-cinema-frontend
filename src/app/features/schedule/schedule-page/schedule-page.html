@@ -62,6 +62,23 @@
       </button>
     }
 
+    @if (today(); as firstDay) {
+      <label
+        class="col-span-6 flex h-11 items-center gap-2 text-[10px] text-muted md:h-auto md:text-xs"
+      >
+        Autre date
+        <input
+          type="date"
+          name="otherDay"
+          [attr.min]="firstDay"
+          [attr.max]="lastDay()"
+          [value]="selectedDay()"
+          (change)="chooseOtherDay($any($event.target).value)"
+          class="rounded-[3px] border border-line bg-transparent px-2 py-1 text-cream scheme-dark"
+        />
+      </label>
+    }
+
     <label
       class="relative col-span-3 col-start-4 row-start-1 flex h-11 items-center justify-self-end md:ml-auto md:h-auto"
     >

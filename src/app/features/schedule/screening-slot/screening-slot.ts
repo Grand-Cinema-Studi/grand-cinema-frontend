@@ -10,4 +10,6 @@ import { Screening } from '../models/schedule';
 })
 export class ScreeningSlot {
   readonly screening = input.required<Screening>();
+  /** The movie of the screening: a screening with seats left opens its page, with the booking form (US 2.3). */
+  readonly movieId = input.required<string>();
 }

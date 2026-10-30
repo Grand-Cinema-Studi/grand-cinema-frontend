@@ -54,7 +54,7 @@
           </h3>
           <ul class="grid grid-cols-3 gap-1.25 sm:grid-cols-6 md:gap-2">
             @for (screening of day.screenings; track screening.screeningId) {
-              <li><app-screening-slot [screening]="screening" /></li>
+              <li><app-screening-slot [screening]="screening" [movieId]="movie.movieId" /></li>
             }
           </ul>
         </div>

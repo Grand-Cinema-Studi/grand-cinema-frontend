@@ -133,7 +133,7 @@
             >
               <ul class="grid grid-cols-3 gap-1.25 md:gap-2">
                 @for (screening of movie.screenings; track screening.screeningId) {
-                  <li><app-screening-slot [screening]="screening" /></li>
+                  <li><app-screening-slot [screening]="screening" [movieId]="movie.movieId" /></li>
                 }
               </ul>
             </app-movie-card>

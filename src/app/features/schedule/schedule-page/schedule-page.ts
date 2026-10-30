@@ -1,4 +1,4 @@
-import { DatePipe, ViewportScroller, formatDate } from '@angular/common';
+import { ViewportScroller, formatDate } from '@angular/common';
 import { Component, LOCALE_ID, afterRenderEffect, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -16,6 +16,7 @@ import { FeaturedMovies } from '../featured-movies/featured-movies';
 import { MovieSchedule, Schedule } from '../models/schedule';
 import { QuickBooking } from '../quick-booking/quick-booking';
 import { ScheduleService } from '../schedule.service';
+import { ScreeningSlot } from '../screening-slot/screening-slot';
 
 type ScheduleState =
   { status: 'loading' } | { status: 'loaded'; schedule: Schedule } | { status: 'failed' };
@@ -39,6 +40,7 @@ function addDays(day: string, count: number): string {
     Paginator,
     QuickBooking,
     RouterLink,
+    ScreeningSlot,
   ],
   selector: 'app-schedule-page',
   templateUrl: './schedule-page.html',

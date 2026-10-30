@@ -6,7 +6,12 @@ import { MovieSchedule, Schedule } from '../models/schedule';
 import { ScheduleService } from '../schedule.service';
 import { SchedulePage } from './schedule-page';
 
-function movie(title: string, genre: string, startsAt: string[]): MovieSchedule {
+function movie(
+  title: string,
+  genre: string,
+  startsAt: string[],
+  remainingSeats: number[] = [],
+): MovieSchedule {
   return {
     movieId: `id-${title}`,
     title,
@@ -20,6 +25,7 @@ function movie(title: string, genre: string, startsAt: string[]): MovieSchedule 
       roomName: `Salle ${index + 1}`,
       startsAt: `2026-07-18T${time}:00`,
       price: 9.5,
+      remainingSeats: remainingSeats[index] ?? 100,
     })),
   };
 }
@@ -234,5 +240,31 @@ describe('US 1.1 – SchedulePage', () => {
     expect(element.querySelector('#cinema')).not.toBeNull();
     expect(element.querySelector('#featured')).not.toBeNull();
     expect(scroller.scrollToAnchor).toHaveBeenCalledWith('cinema');
+  });
+
+  describe('US 2.2 – remaining seats', () => {
+    it('when a screening has seats left, then their number is shown', async () => {
+      const { element } = await render(() =>
+        of({
+          date: '2026-07-18',
+          movies: [movie('Blue Note', 'Documentaire', ['14:30', '20:45'], [42, 1])],
+        }),
+      );
+
+      const screenings = element.querySelectorAll('article li');
+      expect(screenings[0].textContent).toContain('42 places');
+      expect(screenings[1].textContent).toContain('1 place');
+      expect(screenings[1].textContent).not.toContain('1 places');
+    });
+
+    it('when a screening has no seat left, then it is shown as full', async () => {
+      const { element } = await render(() =>
+        of({ date: '2026-07-18', movies: [movie('Blue Note', 'Documentaire', ['20:45'], [0])] }),
+      );
+
+      const screening = element.querySelector('article li');
+      expect(screening?.textContent).toContain('Complet');
+      expect(screening?.textContent).not.toContain('0 place');
+    });
   });
 });

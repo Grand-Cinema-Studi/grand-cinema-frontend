@@ -1,4 +1,5 @@
 import { Component, computed, input, linkedSignal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { RuntimePipe } from '../../../shared/runtime.pipe';
 import { MovieSchedule } from '../models/schedule';
 
@@ -6,7 +7,7 @@ import { MovieSchedule } from '../models/schedule';
 const LONG_TITLE = 16;
 
 @Component({
-  imports: [RuntimePipe],
+  imports: [RouterLink, RuntimePipe],
   selector: 'app-featured-movies',
   templateUrl: './featured-movies.html',
 })

@@ -1,0 +1,15 @@
+@let slot = screening();
+<div
+  class="flex min-h-11 flex-col items-center justify-center rounded-[3px] border border-line py-1 md:min-h-9.75"
+  [class.opacity-60]="slot.remainingSeats === 0"
+>
+  <span class="text-[10px] md:text-xs">{{ slot.startsAt | date: 'HH:mm' }}</span>
+  <span class="text-[8px] text-muted md:text-[10px]">{{ slot.roomName }}</span>
+  @if (slot.remainingSeats === 0) {
+    <span class="text-[8px] font-semibold text-brand uppercase md:text-[10px]">Complet</span>
+  } @else {
+    <span class="text-[8px] text-muted md:text-[10px]"
+      >{{ slot.remainingSeats }} {{ slot.remainingSeats === 1 ? 'place' : 'places' }}</span
+    >
+  }
+</div>

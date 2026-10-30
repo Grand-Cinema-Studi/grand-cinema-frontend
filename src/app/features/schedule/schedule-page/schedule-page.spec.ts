@@ -242,6 +242,36 @@ describe('US 1.1 – SchedulePage', () => {
     expect(scroller.scrollToAnchor).toHaveBeenCalledWith('cinema');
   });
 
+  describe('another date, up to a year ahead', () => {
+    it('when the schedule is loaded, then another date can be chosen from today to a year later', async () => {
+      const { element } = await render(() => of(today));
+
+      const otherDay = element.querySelector<HTMLInputElement>('input[name="otherDay"]');
+      expect(otherDay?.type).toBe('date');
+      expect(otherDay?.getAttribute('min')).toBe('2026-07-18');
+      expect(otherDay?.getAttribute('max')).toBe('2027-07-18');
+    });
+
+    it('when another date is chosen, then the schedule of that date is loaded', async () => {
+      const farAhead: Schedule = {
+        date: '2027-07-17',
+        movies: [movie('Bird', 'Drame', ['20:30'])],
+      };
+      const { element, fixture, service } = await render((date) =>
+        of(date === '2027-07-17' ? farAhead : today),
+      );
+
+      const otherDay = element.querySelector<HTMLInputElement>('input[name="otherDay"]');
+      expect(otherDay).not.toBeNull();
+      otherDay!.value = '2027-07-17';
+      otherDay!.dispatchEvent(new Event('change'));
+      await fixture.whenStable();
+
+      expect(service.getSchedule).toHaveBeenLastCalledWith('2027-07-17');
+      expect(element.textContent).toContain('Bird');
+    });
+  });
+
   describe('US 2.2 – remaining seats', () => {
     it('when a screening has seats left, then their number is shown', async () => {
       const { element } = await render(() =>

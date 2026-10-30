@@ -47,8 +47,8 @@
         {{ featured.synopsis }}
       </p>
       <div class="flex gap-2.5 lg:gap-3">
-        <button
-          type="button"
+        <a
+          [routerLink]="['/movies', featured.movieId]"
           class="flex h-12.5 flex-1 items-center justify-center gap-3.5 rounded-[3px] bg-brand px-4.5 text-[13px] font-semibold hover:brightness-110 lg:flex-none lg:gap-5 lg:px-6"
         >
           Réserver
@@ -60,7 +60,7 @@
             class="lg:hidden"
           />
           <img src="icons/action-arrow.svg" alt="" width="17" height="17" class="hidden lg:block" />
-        </button>
+        </a>
       </div>
     </div>
 

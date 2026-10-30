@@ -1,15 +1,25 @@
 <article class="flex flex-col gap-3 md:gap-4">
-  <img [src]="posterUrl()" alt="" loading="lazy" class="aspect-2/3 w-full bg-night object-cover" />
-  <div class="flex flex-col gap-1.5 md:gap-2.25">
-    <h3 class="line-clamp-2 h-12.5 font-display text-[25px] leading-none md:h-auto md:text-[30px]">
-      {{ title() }}
-    </h3>
-    <p class="flex flex-col gap-1.25 text-[10px] text-muted md:flex-row md:text-xs">
-      <span>{{ genre() }}</span>
-      <span
-        ><span class="hidden md:inline">&nbsp;·&nbsp;</span>{{ durationMinutes() | runtime }}</span
+  <a [routerLink]="['/movies', movieId()]" class="group flex flex-col gap-3 md:gap-4">
+    <img
+      [src]="posterUrl()"
+      alt=""
+      loading="lazy"
+      class="aspect-2/3 w-full bg-night object-cover transition group-hover:brightness-110"
+    />
+    <div class="flex flex-col gap-1.5 md:gap-2.25">
+      <h3
+        class="line-clamp-2 h-12.5 font-display text-[25px] leading-none group-hover:text-brand md:h-auto md:text-[30px]"
       >
-    </p>
-  </div>
+        {{ title() }}
+      </h3>
+      <p class="flex flex-col gap-1.25 text-[10px] text-muted md:flex-row md:text-xs">
+        <span>{{ genre() }}</span>
+        <span
+          ><span class="hidden md:inline">&nbsp;·&nbsp;</span
+          >{{ durationMinutes() | runtime }}</span
+        >
+      </p>
+    </div>
+  </a>
   <ng-content />
 </article>

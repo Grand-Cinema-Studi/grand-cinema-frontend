@@ -1,4 +1,4 @@
-import { DatePipe, ViewportScroller, formatDate } from '@angular/common';
+import { ViewportScroller, formatDate } from '@angular/common';
 import { Component, LOCALE_ID, afterRenderEffect, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -16,6 +16,7 @@ import { FeaturedMovies } from '../featured-movies/featured-movies';
 import { MovieSchedule, Schedule } from '../models/schedule';
 import { QuickBooking } from '../quick-booking/quick-booking';
 import { ScheduleService } from '../schedule.service';
+import { ScreeningSlot } from '../screening-slot/screening-slot';
 
 type ScheduleState =
   { status: 'loading' } | { status: 'loaded'; schedule: Schedule } | { status: 'failed' };
@@ -30,15 +31,21 @@ function addDays(day: string, count: number): string {
   return next.toISOString().slice(0, 10);
 }
 
+/** The same calendar day a year later: "2026-07-18" gives "2027-07-18" (decision of 29/10/2026: booking up to a year ahead). */
+function addOneYear(day: string): string {
+  const [year, month, date] = day.split('-').map(Number);
+  return new Date(Date.UTC(year + 1, month - 1, date)).toISOString().slice(0, 10);
+}
+
 @Component({
   imports: [
     CinemaExperience,
-    DatePipe,
     FeaturedMovies,
     MovieCard,
     Paginator,
     QuickBooking,
     RouterLink,
+    ScreeningSlot,
   ],
   selector: 'app-schedule-page',
   templateUrl: './schedule-page.html',
@@ -84,6 +91,12 @@ export class SchedulePage {
   protected readonly days = computed(() => {
     const today = this.today();
     return today ? Array.from({ length: DAYS_OFFERED }, (_, index) => addDays(today, index)) : [];
+  });
+
+  /** Last day offered by "Autre date": an aid for the visitor, the API accepts any date. */
+  protected readonly lastDay = computed(() => {
+    const today = this.today();
+    return today ? addOneYear(today) : null;
   });
 
   protected readonly genres = computed(() => {
@@ -147,6 +160,13 @@ export class SchedulePage {
     this.genre.set('');
     this.page.set(1);
     this.chosenDay.set(day);
+  }
+
+  /** "Autre date": an emptied field changes nothing. */
+  protected chooseOtherDay(day: string): void {
+    if (day) {
+      this.chooseDay(day);
+    }
   }
 
   protected chooseGenre(genre: string): void {

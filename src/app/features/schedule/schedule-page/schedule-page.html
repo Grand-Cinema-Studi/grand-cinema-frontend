@@ -62,6 +62,23 @@
       </button>
     }
 
+    @if (today(); as firstDay) {
+      <label
+        class="col-span-6 flex h-11 items-center gap-2 text-[10px] text-muted md:h-auto md:text-xs"
+      >
+        Autre date
+        <input
+          type="date"
+          name="otherDay"
+          [attr.min]="firstDay"
+          [attr.max]="lastDay()"
+          [value]="selectedDay()"
+          (change)="chooseOtherDay($any($event.target).value)"
+          class="rounded-[3px] border border-line bg-transparent px-2 py-1 text-cream scheme-dark"
+        />
+      </label>
+    }
+
     <label
       class="relative col-span-3 col-start-4 row-start-1 flex h-11 items-center justify-self-end md:ml-auto md:h-auto"
     >
@@ -108,6 +125,7 @@
         @for (movie of pageMovies(); track movie.movieId) {
           <li [id]="'movie-' + movie.movieId" class="scroll-mt-4">
             <app-movie-card
+              [movieId]="movie.movieId"
               [title]="movie.title"
               [posterUrl]="movie.posterUrl"
               [genre]="movie.genre"
@@ -115,27 +133,7 @@
             >
               <ul class="grid grid-cols-3 gap-1.25 md:gap-2">
                 @for (screening of movie.screenings; track screening.screeningId) {
-                  <li
-                    class="flex min-h-11 flex-col items-center justify-center rounded-[3px] border border-line py-1 md:min-h-9.75"
-                    [class.opacity-60]="screening.remainingSeats === 0"
-                  >
-                    <span class="text-[10px] md:text-xs">{{
-                      screening.startsAt | date: 'HH:mm'
-                    }}</span>
-                    <span class="text-[8px] text-muted md:text-[10px]">{{
-                      screening.roomName
-                    }}</span>
-                    @if (screening.remainingSeats === 0) {
-                      <span class="text-[8px] font-semibold text-brand uppercase md:text-[10px]"
-                        >Complet</span
-                      >
-                    } @else {
-                      <span class="text-[8px] text-muted md:text-[10px]"
-                        >{{ screening.remainingSeats }}
-                        {{ screening.remainingSeats === 1 ? 'place' : 'places' }}</span
-                      >
-                    }
-                  </li>
+                  <li><app-screening-slot [screening]="screening" /></li>
                 }
               </ul>
             </app-movie-card>

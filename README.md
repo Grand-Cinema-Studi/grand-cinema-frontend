@@ -114,7 +114,7 @@ src/
     │   ├── paginator/      pagination des listes (6 films par page)
     │   └── runtime.pipe.ts durée d'un film (« 2h 06m »)
     └── features/           un dossier par fonctionnalité
-        ├── schedule/       US 1.1 : accueil (/) : films à la une, recherche de séance, programmation d'un jour
+        ├── schedule/       US 1.1 et 2.2 : accueil (/) : films à la une, recherche de séance, programmation d'un jour, places restantes
         ├── cinema/         présentation des salles (section statique de l'accueil)
         ├── movies/         US 1.1 : films à l'affiche (/movies)
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
@@ -156,6 +156,7 @@ public/
 | US 2.1 | Mon compte (`/account`, réservé aux utilisateurs connectés) : profil, déconnexion, suppression du compte après confirmation | `GET /api/users/me`, `DELETE /api/users/me` | ✅ |
 | US 2.1 | Politique de confidentialité (`/privacy-policy`), liée depuis l'inscription et le pied de page | — | ✅ |
 | US 2.1 | En-tête : « Connexion », ou prénom de l'utilisateur une fois connecté | — | ✅ |
+| US 2.2 | Accueil : places restantes de chaque séance (« 42 places », « 1 place »), « Complet » quand il n'en reste aucune | `GET /api/schedule` (`remainingSeats`) | ✅ |
 
 Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 

@@ -1,0 +1,75 @@
+<section
+  class="mx-auto flex w-full max-w-360 flex-col gap-10 px-5 py-12 md:gap-14 md:px-16 md:pt-20 md:pb-22"
+>
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="text-muted">Chargement du film…</p>
+    }
+    @case ('not-found') {
+      <div class="flex flex-col items-start gap-4">
+        <h1 class="font-display text-5xl leading-none uppercase md:text-7xl">Film introuvable</h1>
+        <p class="text-muted">Ce film n'existe pas ou n'est plus proposé par le cinéma.</p>
+        <a routerLink="/movies" class="text-[13px] underline">Voir tous les films</a>
+      </div>
+    }
+    @case ('failed') {
+      <p role="alert" class="text-muted">
+        Le film est momentanément indisponible. Réessayez dans quelques instants.
+      </p>
+    }
+  }
+
+  @if (movie(); as movie) {
+    <div class="grid gap-8 md:grid-cols-[minmax(0,1fr)_2fr] md:gap-12">
+      <img
+        [src]="movie.posterUrl"
+        alt=""
+        class="aspect-2/3 w-full max-w-80 rounded-[3px] bg-night object-cover"
+      />
+      <div class="flex flex-col gap-4 md:gap-5">
+        <p class="flex items-center gap-2 md:gap-2.5">
+          <span class="text-[11px] text-brand md:text-xs" aria-hidden="true">◆</span>
+          <span class="text-[9px] font-semibold uppercase md:text-[11px]">{{ movie.genre }}</span>
+        </p>
+        <h1 class="font-display text-5xl leading-none uppercase md:text-7xl">{{ movie.title }}</h1>
+        <p class="flex flex-wrap items-center gap-3 text-[11px] text-muted md:text-[13px]">
+          <span>{{ movie.durationMinutes | runtime }}</span>
+          <span aria-hidden="true">·</span>
+          <span>Sortie le {{ movie.releaseDate | date: 'longDate' }}</span>
+        </p>
+        <p class="max-w-2xl text-sm leading-[1.65] text-mist md:text-base">{{ movie.synopsis }}</p>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-6 md:gap-8">
+      <h2
+        class="border-b border-line pb-4 font-display text-4xl leading-none uppercase md:pb-5 md:text-5xl"
+      >
+        Séances
+      </h2>
+      @for (day of days(); track day.date) {
+        <div [attr.data-date]="day.date" class="flex flex-col gap-3">
+          <h3 class="text-xs font-semibold capitalize md:text-sm">
+            {{ day.date | date: 'EEEE d MMMM y' }}
+          </h3>
+          <ul class="grid grid-cols-3 gap-1.25 sm:grid-cols-6 md:gap-2">
+            @for (screening of day.screenings; track screening.screeningId) {
+              <li><app-screening-slot [screening]="screening" /></li>
+            }
+          </ul>
+        </div>
+      } @empty {
+        <p class="text-muted">Aucune séance n'est programmée pour ce film.</p>
+      }
+      @if (hasMoreDays()) {
+        <button
+          type="button"
+          (click)="showMoreDays()"
+          class="self-start rounded-[3px] border border-line px-4.5 py-3 text-[13px] font-semibold hover:border-cream"
+        >
+          Voir les dates suivantes
+        </button>
+      }
+    </div>
+  }
+</section>

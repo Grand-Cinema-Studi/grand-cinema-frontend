@@ -15,6 +15,11 @@ export const routes: Routes = [
       import('./features/movies/movies-page/movies-page').then((m) => m.MoviesPage),
   },
   {
+    path: 'movies/:movieId',
+    title: 'Le Grand Cinéma – Fiche du film',
+    loadComponent: () => import('./features/movies/movie-page/movie-page').then((m) => m.MoviePage),
+  },
+  {
     path: 'sign-up',
     title: 'Le Grand Cinéma – Créer un compte',
     loadComponent: () =>

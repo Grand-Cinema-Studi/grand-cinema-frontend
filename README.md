@@ -102,7 +102,7 @@ src/
 ├── styles.css              Tailwind, polices et thème du cinéma (couleurs de la maquette)
 └── app/
     ├── app.ts              composant racine, affiche la mise en page
-    ├── app.config.ts       providers globaux : routeur, HttpClient avec l'intercepteur, affichage en français
+    ├── app.config.ts       providers globaux : routeur (paramètres d'adresse passés aux pages en entrées), HttpClient avec l'intercepteur, affichage en français
     ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account protégée par authGuard
     ├── core/               éléments techniques communs
     │   ├── auth/           session (AuthService), intercepteur, garde, types des échanges avec l'API
@@ -110,13 +110,13 @@ src/
     │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté), zone des pages, pied de page
     │   └── not-found/      page « introuvable » (toute adresse inconnue)
     ├── shared/             réutilisé par plusieurs écrans
-    │   ├── movie-card/     carte d'un film (affiche, titre, genre, durée)
+    │   ├── movie-card/     carte d'un film (affiche, titre, genre, durée), lien vers sa fiche
     │   ├── paginator/      pagination des listes (6 films par page)
     │   └── runtime.pipe.ts durée d'un film (« 2h 06m »)
     └── features/           un dossier par fonctionnalité
-        ├── schedule/       US 1.1 et 2.2 : accueil (/) : films à la une, recherche de séance, programmation d'un jour, places restantes
+        ├── schedule/       US 1.1 et 2.2 : accueil (/) : films à la une, recherche de séance, programmation d'un jour (« Autre date » jusqu'à un an), pastille de séance avec les places restantes (partagée avec la fiche d'un film)
         ├── cinema/         présentation des salles (section statique de l'accueil)
-        ├── movies/         US 1.1 : films à l'affiche (/movies)
+        ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
         ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
         └── legal/          US 2.1 : politique de confidentialité (/privacy-policy)
@@ -151,6 +151,8 @@ public/
 |---|---|---|---|
 | US 1.1 | Accueil (`/`) : carrousel des films à la une (4 premiers films du jour), barre « Votre prochaine évasion » (date, film), programmation d'un jour : films et séances (heure, salle), choix du jour parmi les 7 prochains, filtre par genre, 6 films par page | `GET /api/schedule?date=` | ✅ |
 | US 1.1 | Tous les films à l'affiche (`/movies`), 6 films par page | `GET /api/movies` | ✅ |
+| US 1.1 | Fiche d'un film (`/movies/:id`), ouverte depuis une carte de film ou « Réserver » du carrousel : informations du film et toutes ses séances à venir, jour par jour (7 jours, puis « Voir les dates suivantes »), avec les places restantes ; « Film introuvable » pour un film inconnu | `GET /api/movies/{id}` | ✅ |
+| US 1.1 | Accueil : champ « Autre date », d'aujourd'hui à un an plus tard (réservation longtemps à l'avance) | `GET /api/schedule?date=` | ✅ |
 | US 2.1 | Créer un compte (`/sign-up`) : prénom, nom, adresse e-mail, mot de passe de 12 caractères au moins, acceptation obligatoire de la politique de confidentialité | `POST /api/users` | ✅ |
 | US 2.1 | Se connecter (`/sign-in`), puis retour à la page demandée | `POST /api/tokens` | ✅ |
 | US 2.1 | Mon compte (`/account`, réservé aux utilisateurs connectés) : profil, déconnexion, suppression du compte après confirmation | `GET /api/users/me`, `DELETE /api/users/me` | ✅ |

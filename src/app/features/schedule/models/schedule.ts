@@ -4,6 +4,8 @@ export interface Screening {
   /** Local time of the cinema (Europe/Paris), without time zone: "2026-07-18T20:30:00". */
   startsAt: string;
   price: number;
+  /** Seats still on sale (US 2.2): the API has already subtracted the seats sold or held by a payment in progress. */
+  remainingSeats: number;
 }
 
 export interface MovieSchedule {

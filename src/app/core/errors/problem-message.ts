@@ -6,6 +6,10 @@ const messages = new Map<string, string>([
   ['/errors/invalid-credentials', "L'adresse e-mail ou le mot de passe est incorrect."],
   ['/errors/user-not-found', "Ce compte n'existe plus."],
   ['/errors/validation', 'Certains champs ne sont pas valides.'],
+  ['/errors/not-enough-seats', 'Il ne reste plus assez de places pour cette séance.'],
+  ['/errors/screening-started', 'Cette séance a déjà commencé.'],
+  ['/errors/screening-not-found', "Cette séance n'existe plus."],
+  ['/errors/reservation-not-found', 'Cette réservation est introuvable.'],
 ]);
 
 const unavailable = 'Le service est momentanément indisponible. Réessayez dans quelques instants.';

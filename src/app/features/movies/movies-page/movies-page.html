@@ -26,6 +26,7 @@
         @for (movie of pageMovies(); track movie.movieId) {
           <li>
             <app-movie-card
+              [movieId]="movie.movieId"
               [title]="movie.title"
               [posterUrl]="movie.posterUrl"
               [genre]="movie.genre"

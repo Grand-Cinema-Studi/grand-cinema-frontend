@@ -108,6 +108,7 @@
         @for (movie of pageMovies(); track movie.movieId) {
           <li [id]="'movie-' + movie.movieId" class="scroll-mt-4">
             <app-movie-card
+              [movieId]="movie.movieId"
               [title]="movie.title"
               [posterUrl]="movie.posterUrl"
               [genre]="movie.genre"

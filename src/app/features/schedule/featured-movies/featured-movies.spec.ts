@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { MovieSchedule } from '../models/schedule';
 import { FeaturedMovies } from './featured-movies';
 
@@ -26,6 +27,7 @@ class Host {
 
 describe('US 1.1 – FeaturedMovies', () => {
   async function render() {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(Host);
     await fixture.whenStable();
     const element = fixture.nativeElement as HTMLElement;
@@ -64,5 +66,14 @@ describe('US 1.1 – FeaturedMovies', () => {
     await click('Film précédent');
 
     expect(title()).toBe('Vertigo');
+  });
+
+  it('when a movie is featured, then "Réserver" opens its page', async () => {
+    const { element } = await render();
+
+    const book = Array.from(element.querySelectorAll('a')).find((link) =>
+      link.textContent?.includes('Réserver'),
+    );
+    expect(book?.getAttribute('href')).toBe('/movies/id-Alien');
   });
 });

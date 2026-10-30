@@ -1,10 +1,11 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Screening } from '../models/schedule';
 
 /** One screening: time, room, and remaining seats or "Complet" (US 2.2). Used by the schedule and by the movie page. */
 @Component({
-  imports: [DatePipe],
+  imports: [DatePipe, NgTemplateOutlet, RouterLink],
   selector: 'app-screening-slot',
   templateUrl: './screening-slot.html',
 })

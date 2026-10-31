@@ -1,8 +1,21 @@
 @let slot = screening();
-<div
-  class="flex min-h-11 flex-col items-center justify-center rounded-[3px] border border-line py-1 md:min-h-9.75"
-  [class.opacity-60]="slot.remainingSeats === 0"
->
+@if (slot.remainingSeats > 0) {
+  <a
+    [routerLink]="['/movies', movieId()]"
+    [queryParams]="{ screening: slot.screeningId }"
+    class="flex min-h-11 flex-col items-center justify-center rounded-[3px] border border-line py-1 hover:border-cream md:min-h-9.75"
+  >
+    <ng-container *ngTemplateOutlet="details" />
+  </a>
+} @else {
+  <div
+    class="flex min-h-11 flex-col items-center justify-center rounded-[3px] border border-line py-1 opacity-60 md:min-h-9.75"
+  >
+    <ng-container *ngTemplateOutlet="details" />
+  </div>
+}
+
+<ng-template #details>
   <span class="text-[10px] md:text-xs">{{ slot.startsAt | date: 'HH:mm' }}</span>
   <span class="text-[8px] text-muted md:text-[10px]">{{ slot.roomName }}</span>
   @if (slot.remainingSeats === 0) {
@@ -12,4 +25,4 @@
       >{{ slot.remainingSeats }} {{ slot.remainingSeats === 1 ? 'place' : 'places' }}</span
     >
   }
-</div>
+</ng-template>

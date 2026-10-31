@@ -47,29 +47,43 @@
       >
         Séances
       </h2>
-      @for (day of days(); track day.date) {
-        <div [attr.data-date]="day.date" class="flex flex-col gap-3">
-          <h3 class="text-xs font-semibold capitalize md:text-sm">
-            {{ day.date | date: 'EEEE d MMMM y' }}
-          </h3>
-          <ul class="grid grid-cols-3 gap-1.25 sm:grid-cols-6 md:gap-2">
-            @for (screening of day.screenings; track screening.screeningId) {
-              <li><app-screening-slot [screening]="screening" /></li>
-            }
-          </ul>
+      <div
+        class="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-10"
+      >
+        @if (selectedScreening(); as chosen) {
+          <!-- Phone and tablet: bar stuck to the bottom of the screen; desktop: right column stuck to the top -->
+          <aside
+            class="sticky bottom-0 z-10 order-last lg:top-6 lg:bottom-auto lg:order-none lg:col-start-2 lg:row-start-1"
+          >
+            <app-hold-form [screening]="chosen" />
+          </aside>
+        }
+        <div class="flex flex-col gap-6 md:gap-8 lg:col-start-1 lg:row-start-1">
+          @for (day of days(); track day.date) {
+            <div [attr.data-date]="day.date" class="flex flex-col gap-3">
+              <h3 class="text-xs font-semibold capitalize md:text-sm">
+                {{ day.date | date: 'EEEE d MMMM y' }}
+              </h3>
+              <ul class="grid grid-cols-3 gap-1.25 sm:grid-cols-6 md:gap-2">
+                @for (screening of day.screenings; track screening.screeningId) {
+                  <li><app-screening-slot [screening]="screening" [movieId]="movie.movieId" /></li>
+                }
+              </ul>
+            </div>
+          } @empty {
+            <p class="text-muted">Aucune séance n'est programmée pour ce film.</p>
+          }
+          @if (hasMoreDays()) {
+            <button
+              type="button"
+              (click)="showMoreDays()"
+              class="self-start rounded-[3px] border border-line px-4.5 py-3 text-[13px] font-semibold hover:border-cream"
+            >
+              Voir les dates suivantes
+            </button>
+          }
         </div>
-      } @empty {
-        <p class="text-muted">Aucune séance n'est programmée pour ce film.</p>
-      }
-      @if (hasMoreDays()) {
-        <button
-          type="button"
-          (click)="showMoreDays()"
-          class="self-start rounded-[3px] border border-line px-4.5 py-3 text-[13px] font-semibold hover:border-cream"
-        >
-          Voir les dates suivantes
-        </button>
-      }
+      </div>
     </div>
   }
 </section>

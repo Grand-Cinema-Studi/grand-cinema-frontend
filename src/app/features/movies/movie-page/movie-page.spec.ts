@@ -1,7 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
+import { ReservationsService } from '../../reservations/reservations.service';
 import { MovieDetails, ScreeningDay } from '../models/movie-details';
 import { MoviesService } from '../movies.service';
 import { MoviePage } from './movie-page';
@@ -42,7 +45,12 @@ describe('US 1.1 – MoviePage', () => {
     const service = { getMovieDetails: vi.fn(getMovieDetails) };
     TestBed.configureTestingModule({
       imports: [MoviePage],
-      providers: [provideRouter([]), { provide: MoviesService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: MoviesService, useValue: service },
+        { provide: AuthService, useValue: { isSignedIn: signal(false) } },
+        { provide: ReservationsService, useValue: {} },
+      ],
     });
     const fixture = TestBed.createComponent(MoviePage);
     fixture.componentRef.setInput('movieId', movieId);
@@ -127,5 +135,15 @@ describe('US 1.1 – MoviePage', () => {
     expect(element.querySelector('[role="alert"]')?.textContent).toContain(
       'Le film est momentanément indisponible.',
     );
+  });
+
+  it('when a screening is chosen, then its booking form is shown', async () => {
+    const { element, fixture } = await render(() => of(bird([day('2026-10-31', [42, 0])])));
+    expect(element.querySelector('app-hold-form')).toBeNull();
+
+    fixture.componentRef.setInput('screening', '2026-10-31-0');
+    await fixture.whenStable();
+
+    expect(element.querySelector('app-hold-form')?.textContent).toContain('Salle 1');
   });
 });

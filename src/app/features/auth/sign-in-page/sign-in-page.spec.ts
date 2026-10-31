@@ -94,4 +94,12 @@ describe('US 2.1 – SignInPage', () => {
     );
     expect(page.navigate).not.toHaveBeenCalled();
   });
+
+  it('when the visitor goes from the sign-in to the sign-up, then the page asked for is kept', async () => {
+    const page = await render(() => of(lea), '/movies/id-bird?screening=id-screening');
+
+    const link = page.element.querySelector<HTMLAnchorElement>('a[href^="/sign-up"]');
+    const query = new URLSearchParams(link?.getAttribute('href')?.split('?')[1]);
+    expect(query.get('returnUrl')).toBe('/movies/id-bird?screening=id-screening');
+  });
 });

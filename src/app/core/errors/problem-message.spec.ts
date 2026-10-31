@@ -14,6 +14,15 @@ describe('US 2.1 – problemMessage', () => {
     );
   });
 
+  it('when a reservation is refused, then the matching French message is returned', () => {
+    expect(problemMessage(problem(409, '/errors/not-enough-seats'))).toBe(
+      'Il ne reste plus assez de places pour cette séance.',
+    );
+    expect(problemMessage(problem(409, '/errors/screening-started'))).toBe(
+      'Cette séance a déjà commencé.',
+    );
+  });
+
   it('when there were too many attempts, then the visitor is asked to wait', () => {
     expect(problemMessage(problem(429))).toBe('Trop de tentatives. Réessayez dans une minute.');
   });

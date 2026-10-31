@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { RegisterUserRequest, User } from '../../../core/auth/models/auth';
@@ -15,11 +15,23 @@ describe('US 2.1 – SignUpPage', () => {
     role: 'Customer',
   } as User;
 
-  async function render(register: (request: RegisterUserRequest) => Observable<User>) {
+  async function render(
+    register: (request: RegisterUserRequest) => Observable<User>,
+    returnUrl?: string,
+  ) {
     const auth = { register: vi.fn(register) };
     TestBed.configureTestingModule({
       imports: [SignUpPage],
-      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: auth },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { queryParamMap: convertToParamMap(returnUrl ? { returnUrl } : {}) },
+          },
+        },
+      ],
     });
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
@@ -110,5 +122,15 @@ describe('US 2.1 – SignUpPage', () => {
       'label[for="acceptPrivacyPolicy"] a',
     );
     expect(link?.getAttribute('href')).toBe('/privacy-policy');
+  });
+
+  it('when the visitor was sent to the sign-up by another page, then this page opens after the sign-up', async () => {
+    const page = await render(() => of(lea), '/movies/id-bird?screening=id-screening');
+    page.fillValidForm();
+    page.element.querySelector<HTMLInputElement>('#acceptPrivacyPolicy')!.click();
+
+    await page.submit();
+
+    expect(page.navigate).toHaveBeenCalledWith('/movies/id-bird?screening=id-screening');
   });
 });

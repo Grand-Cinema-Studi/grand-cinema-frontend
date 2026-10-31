@@ -1,0 +1,51 @@
+<section class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-5 py-12 md:py-20">
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="text-muted">Chargement de votre réservation…</p>
+    }
+    @case ('failed') {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">
+        Réservation introuvable
+      </h1>
+      <a routerLink="/" class="text-[13px] underline">Retour à l'accueil</a>
+    }
+  }
+
+  @if (reservation(); as reservation) {
+    @if (expired()) {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">Places libérées</h1>
+      <p role="alert" class="text-muted">
+        Le délai de 10 minutes est écoulé sans paiement : vos places ont été libérées.
+      </p>
+      <a
+        routerLink="/"
+        class="flex h-12.5 items-center self-start rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110"
+      >
+        Choisir une autre séance
+      </a>
+    } @else {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">
+        Vos places sont bloquées
+      </h1>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+        <dt class="text-muted">Places</dt>
+        <dd>{{ reservation.seats.join(', ') }}</dd>
+        <dt class="text-muted">Montant</dt>
+        <dd>{{ reservation.totalAmount | currency: 'EUR' }}</dd>
+      </dl>
+      <p class="text-sm">
+        Il vous reste
+        <strong data-countdown class="font-display text-3xl text-brand">{{ countdown() }}</strong>
+        pour payer ; passé ce délai, vos places sont libérées.
+      </p>
+      <button
+        type="button"
+        disabled
+        class="flex h-12.5 items-center justify-center self-start rounded-[3px] bg-brand px-6 text-[13px] font-semibold disabled:opacity-60"
+      >
+        Payer
+      </button>
+      <p class="text-xs text-muted">Le paiement en ligne sera disponible prochainement.</p>
+    }
+  }
+</section>

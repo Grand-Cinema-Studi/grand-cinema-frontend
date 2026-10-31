@@ -47,6 +47,9 @@
       >
         Séances
       </h2>
+      @if (selectedScreening(); as chosen) {
+        <app-hold-form [screening]="chosen" />
+      }
       @for (day of days(); track day.date) {
         <div [attr.data-date]="day.date" class="flex flex-col gap-3">
           <h3 class="text-xs font-semibold capitalize md:text-sm">

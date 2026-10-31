@@ -5,6 +5,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { RuntimePipe } from '../../../shared/runtime.pipe';
+import { HoldForm } from '../../reservations/hold-form/hold-form';
 import { ScreeningSlot } from '../../schedule/screening-slot/screening-slot';
 import { MovieDetails } from '../models/movie-details';
 import { MoviesService } from '../movies.service';
@@ -29,7 +30,7 @@ function isMovieNotFound(error: unknown): boolean {
 }
 
 @Component({
-  imports: [DatePipe, RouterLink, RuntimePipe, ScreeningSlot],
+  imports: [DatePipe, HoldForm, RouterLink, RuntimePipe, ScreeningSlot],
   selector: 'app-movie-page',
   templateUrl: './movie-page.html',
 })
@@ -76,6 +77,16 @@ export class MoviePage {
   protected readonly hasMoreDays = computed(
     () => (this.movie()?.days.length ?? 0) > this.shownDays(),
   );
+
+  /** The chosen screening, searched among all the days, also those not shown yet. */
+  protected readonly selectedScreening = computed(() => {
+    const screeningId = this.screening();
+    return (
+      this.movie()
+        ?.days.flatMap((day) => day.screenings)
+        .find((screening) => screening.screeningId === screeningId) ?? null
+    );
+  });
 
   protected showMoreDays(): void {
     this.shownDays.update((count) => count + DAYS_PER_STEP);

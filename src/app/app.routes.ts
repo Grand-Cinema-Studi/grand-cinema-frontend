@@ -20,6 +20,15 @@ export const routes: Routes = [
     loadComponent: () => import('./features/movies/movie-page/movie-page').then((m) => m.MoviePage),
   },
   {
+    path: 'reservations/:reservationId',
+    title: 'Le Grand Cinéma – Votre réservation',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/reservations/reservation-page/reservation-page').then(
+        (m) => m.ReservationPage,
+      ),
+  },
+  {
     path: 'sign-up',
     title: 'Le Grand Cinéma – Créer un compte',
     loadComponent: () =>

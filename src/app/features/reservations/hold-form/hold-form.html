@@ -1,0 +1,40 @@
+@let chosen = screening();
+<form
+  (submit)="$event.preventDefault(); hold()"
+  class="flex flex-col gap-4 rounded-[3px] border border-line bg-surface p-5 md:flex-row md:flex-wrap md:items-end md:gap-6 md:p-6"
+>
+  <div class="flex flex-col gap-1.5">
+    <p class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Votre séance</p>
+    <p class="text-sm capitalize">{{ chosen.startsAt | date: 'EEEE d MMMM y, HH:mm' }}</p>
+    <p class="text-xs text-muted">
+      {{ chosen.roomName }} · {{ chosen.price | currency: 'EUR' }} la place
+    </p>
+  </div>
+
+  <label class="flex flex-col gap-1.5">
+    <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+      >Nombre de places</span
+    >
+    <select
+      name="seatCount"
+      (change)="seatCount.set(+$any($event.target).value)"
+      class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
+    >
+      @for (count of seatCounts(); track count) {
+        <option [value]="count" [selected]="count === seatCount()">{{ count }}</option>
+      }
+    </select>
+  </label>
+
+  <button
+    type="submit"
+    [disabled]="sending()"
+    class="flex h-12.5 items-center justify-center rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
+  >
+    Réserver
+  </button>
+
+  @if (error(); as message) {
+    <p role="alert" class="text-sm text-brand md:basis-full">{{ message }}</p>
+  }
+</form>

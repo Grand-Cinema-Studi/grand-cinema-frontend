@@ -38,6 +38,8 @@ export class MoviePage {
 
   /** Identifier of the movie, read from the address /movies/:movieId (withComponentInputBinding). */
   readonly movieId = input.required<string>();
+  /** The screening chosen on a slot (?screening=…), whose booking form is shown (US 2.3). */
+  readonly screening = input<string>();
 
   protected readonly state = toSignal(
     toObservable(this.movieId).pipe(

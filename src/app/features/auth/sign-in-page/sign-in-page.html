@@ -46,6 +46,11 @@
 
   <p class="text-sm text-muted">
     Pas encore de compte ?
-    <a routerLink="/sign-up" class="text-cream underline">Créer un compte</a>
+    <a
+      routerLink="/sign-up"
+      [queryParams]="returnUrl ? { returnUrl } : {}"
+      class="text-cream underline"
+      >Créer un compte</a
+    >
   </p>
 </section>

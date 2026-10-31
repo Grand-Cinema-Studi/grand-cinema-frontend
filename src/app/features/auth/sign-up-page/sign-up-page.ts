@@ -5,8 +5,9 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { safeReturnUrl } from '../../../core/auth/return-url';
 import { problemMessage } from '../../../core/errors/problem-message';
 
 @Component({
@@ -17,6 +18,7 @@ import { problemMessage } from '../../../core/errors/problem-message';
 export class SignUpPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  protected readonly returnUrl = inject(ActivatedRoute).snapshot.queryParamMap.get('returnUrl');
 
   // Same limits as the API, to help the visitor before sending; the API still checks everything
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -43,7 +45,7 @@ export class SignUpPage {
     this.sending.set(true);
     this.error.set(null);
     this.auth.register(this.form.getRawValue()).subscribe({
-      next: () => void this.router.navigateByUrl('/account'),
+      next: () => void this.router.navigateByUrl(safeReturnUrl(this.returnUrl)),
       error: (error: unknown) => {
         this.error.set(problemMessage(error));
         this.sending.set(false);

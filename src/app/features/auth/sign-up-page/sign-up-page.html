@@ -107,6 +107,11 @@
 
   <p class="text-sm text-muted">
     Déjà un compte ?
-    <a routerLink="/sign-in" class="text-cream underline">Se connecter</a>
+    <a
+      routerLink="/sign-in"
+      [queryParams]="returnUrl ? { returnUrl } : {}"
+      class="text-cream underline"
+      >Se connecter</a
+    >
   </p>
 </section>

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { Reservation } from '../models/reservation';
 import { ReservationsService } from '../reservations.service';
@@ -27,20 +27,19 @@ describe('US 2.3 – ReservationPage', () => {
   });
 
   async function render(reservation: Reservation) {
+    const reservations = {
+      getReservation: vi.fn(() => of(reservation)),
+      cancelHold: vi.fn(() => of(undefined)),
+    };
     TestBed.configureTestingModule({
       imports: [ReservationPage],
-      providers: [
-        provideRouter([]),
-        {
-          provide: ReservationsService,
-          useValue: { getReservation: vi.fn(() => of(reservation)) },
-        },
-      ],
+      providers: [provideRouter([]), { provide: ReservationsService, useValue: reservations }],
     });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ReservationPage);
     fixture.componentRef.setInput('reservationId', 'id-hold');
     await fixture.whenStable();
-    return { fixture, element: fixture.nativeElement as HTMLElement };
+    return { fixture, element: fixture.nativeElement as HTMLElement, reservations, navigate };
   }
 
   it('when the seats are held, then they are shown with the amount and the time left to pay', async () => {
@@ -69,5 +68,26 @@ describe('US 2.3 – ReservationPage', () => {
     expect(element.querySelector('[role="alert"]')?.textContent).toContain(
       'vos places ont été libérées',
     );
+  });
+
+  it('when the customer cancels the hold, then it is cancelled and the page of the movie opens', async () => {
+    const { element, fixture, reservations, navigate } = await render(hold);
+
+    Array.from(element.querySelectorAll('button'))
+      .find((button) => button.textContent?.trim() === 'Annuler')
+      ?.click();
+    await fixture.whenStable();
+
+    expect(reservations.cancelHold).toHaveBeenCalledWith('id-hold');
+    expect(navigate).toHaveBeenCalledWith('/movies/id-bird');
+  });
+
+  it('when the seats were freed, then the visitor can choose another screening of the same movie', async () => {
+    const { element } = await render({ ...hold, status: 'Expired' });
+
+    const link = Array.from(element.querySelectorAll('a')).find((anchor) =>
+      anchor.textContent?.includes('Choisir une autre séance'),
+    );
+    expect(link?.getAttribute('href')).toBe('/movies/id-bird');
   });
 });

@@ -21,6 +21,9 @@ describe('US 2.1 – problemMessage', () => {
     expect(problemMessage(problem(409, '/errors/screening-started'))).toBe(
       'Cette séance a déjà commencé.',
     );
+    expect(problemMessage(problem(409, '/errors/seat-limit-reached'))).toBe(
+      'Vous avez déjà le nombre maximum de places (10, bloquées ou payées) pour cette séance.',
+    );
   });
 
   it('when there were too many attempts, then the visitor is asked to wait', () => {

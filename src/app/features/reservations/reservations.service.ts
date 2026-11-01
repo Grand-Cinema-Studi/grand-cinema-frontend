@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { EMPTY, Observable } from 'rxjs';
 import { HoldSeatsRequest, Reservation } from './models/reservation';
 
 @Injectable({ providedIn: 'root' })
@@ -15,5 +15,9 @@ export class ReservationsService {
   /** A hold of the signed-in customer; its status becomes "Expired" after 10 minutes. */
   getReservation(reservationId: string): Observable<Reservation> {
     return this.http.get<Reservation>(`/api/reservations/${reservationId}`);
+  }
+
+  cancelHold(reservationId: string): Observable<void> {
+    return EMPTY;
   }
 }

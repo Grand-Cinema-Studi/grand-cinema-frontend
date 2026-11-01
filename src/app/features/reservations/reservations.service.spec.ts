@@ -8,6 +8,7 @@ describe('US 2.3 – ReservationsService', () => {
   const hold: Reservation = {
     reservationId: 'id-hold',
     screeningId: 'id-screening',
+    movieId: 'id-bird',
     status: 'PendingPayment',
     seats: ['A1', 'A2'],
     totalAmount: 24,
@@ -50,6 +51,19 @@ describe('US 2.3 – ReservationsService', () => {
     expect(request.request.method).toBe('GET');
     request.flush(hold);
     expect(result).toEqual(hold);
+    http.verify();
+  });
+
+  it('when a hold is cancelled, then DELETE /api/reservations/{id} is called', () => {
+    const { http, service } = setUp();
+    let done = false;
+
+    service.cancelHold('id-hold').subscribe({ complete: () => (done = true) });
+
+    const request = http.expectOne('/api/reservations/id-hold');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    expect(done).toBe(true);
     http.verify();
   });
 });

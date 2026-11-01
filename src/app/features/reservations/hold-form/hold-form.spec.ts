@@ -26,6 +26,7 @@ class Host {
 const hold: Reservation = {
   reservationId: 'id-hold',
   screeningId: 'id-screening',
+  movieId: 'id-bird',
   status: 'PendingPayment',
   seats: ['A1', 'A2'],
   totalAmount: 24,

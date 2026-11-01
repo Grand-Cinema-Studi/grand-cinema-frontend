@@ -8,6 +8,8 @@ export interface HoldSeatsRequest {
 export interface Reservation {
   reservationId: string;
   screeningId: string;
+  /** The movie of the screening: the page of the hold goes back to it. */
+  movieId: string;
   /** "PendingPayment" while the customer pays, "Expired" after 10 minutes, "Confirmed" once paid (US 3.1). */
   status: 'PendingPayment' | 'Expired' | 'Confirmed' | 'Cancelled';
   /** Seats given by the cinema: "A1", "A2". */

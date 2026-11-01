@@ -1,8 +1,9 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { problemMessage } from '../../../core/errors/problem-message';
 import { Reservation } from '../models/reservation';
 import { ReservationsService } from '../reservations.service';
 
@@ -16,6 +17,9 @@ type ReservationState =
 })
 export class ReservationPage {
   private readonly reservations = inject(ReservationsService);
+  private readonly router = inject(Router);
+  protected readonly cancelling = signal(false);
+  protected readonly error = signal<string | null>(null);
 
   /** Identifier of the hold, read from the address /reservations/:reservationId. */
   readonly reservationId = input.required<string>();
@@ -66,5 +70,18 @@ export class ReservationPage {
   protected countdown(): string {
     const seconds = Math.ceil(this.timeLeft() / 1000);
     return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+  }
+
+  /** Cancels the hold: its seats are on sale again at once, and the visitor goes back to the movie. */
+  protected cancel(reservation: Reservation): void {
+    this.cancelling.set(true);
+    this.error.set(null);
+    this.reservations.cancelHold(reservation.reservationId).subscribe({
+      next: () => void this.router.navigateByUrl(`/movies/${reservation.movieId}`),
+      error: (error: unknown) => {
+        this.cancelling.set(false);
+        this.error.set(problemMessage(error));
+      },
+    });
   }
 }

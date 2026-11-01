@@ -117,7 +117,7 @@ src/
         ├── schedule/       US 1.1 et 2.2 : accueil (/) : films à la une, recherche de séance, programmation d'un jour (« Autre date » jusqu'à un an), pastille de séance avec les places restantes, lien vers la réservation (partagée avec la fiche d'un film)
         ├── cinema/         présentation des salles (section statique de l'accueil)
         ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
-        ├── reservations/   US 2.3 : formulaire de réservation (fiche d'un film), page du blocage et son compte à rebours (/reservations/:id)
+        ├── reservations/   US 2.3 : formulaire de réservation (fiche d'un film), page du blocage, son compte à rebours et le bouton « Annuler » (/reservations/:id)
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
         ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
         └── legal/          US 2.1 : politique de confidentialité (/privacy-policy)
@@ -160,7 +160,7 @@ public/
 | US 2.1 | Politique de confidentialité (`/privacy-policy`), liée depuis l'inscription et le pied de page | — | ✅ |
 | US 2.1 | En-tête : « Connexion », ou prénom de l'utilisateur une fois connecté | — | ✅ |
 | US 2.2 | Accueil : places restantes de chaque séance (« 42 places », « 1 place »), « Complet » quand il n'en reste aucune | `GET /api/schedule` (`remainingSeats`) | ✅ |
-| US 2.3 | Réserver depuis une séance : formulaire sur la fiche du film (1 à 10 places, toujours visible en faisant défiler), connexion ou création de compte puis retour au formulaire ; page du blocage (`/reservations/:id`) avec places, montant et compte à rebours de 10 minutes, puis message quand les places sont libérées ; messages pour « plus assez de places » et « séance commencée » | `POST /api/reservations`, `GET /api/reservations/{id}` | ✅ (paiement : US 3.1) |
+| US 2.3 | Réserver depuis une séance : formulaire sur la fiche du film (1 à 10 places, toujours visible en faisant défiler), connexion ou création de compte puis retour au formulaire ; page du blocage (`/reservations/:id`) avec places, montant et compte à rebours de 10 minutes, bouton « Annuler » qui libère aussitôt les places et ramène à la fiche du film, puis message quand les places sont libérées ; messages pour « plus assez de places », « séance commencée » et la limite de 10 places par compte et par séance | `POST /api/reservations`, `GET /api/reservations/{id}`, `DELETE /api/reservations/{id}` | ✅ (paiement : US 3.1) |
 
 Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 

@@ -16,4 +16,9 @@ export class ReservationsService {
   getReservation(reservationId: string): Observable<Reservation> {
     return this.http.get<Reservation>(`/api/reservations/${reservationId}`);
   }
+
+  /** Cancels a hold before payment: its seats are on sale again at once (204). */
+  cancelHold(reservationId: string): Observable<void> {
+    return this.http.delete<void>(`/api/reservations/${reservationId}`);
+  }
 }

@@ -18,7 +18,7 @@
         Le délai de 10 minutes est écoulé sans paiement : vos places ont été libérées.
       </p>
       <a
-        routerLink="/"
+        [routerLink]="['/movies', reservation.movieId]"
         class="flex h-12.5 items-center self-start rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110"
       >
         Choisir une autre séance
@@ -38,13 +38,26 @@
         <strong data-countdown class="font-display text-3xl text-brand">{{ countdown() }}</strong>
         pour payer ; passé ce délai, vos places sont libérées.
       </p>
-      <button
-        type="button"
-        disabled
-        class="flex h-12.5 items-center justify-center self-start rounded-[3px] bg-brand px-6 text-[13px] font-semibold disabled:opacity-60"
-      >
-        Payer
-      </button>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled
+          class="flex h-12.5 items-center justify-center rounded-[3px] bg-brand px-6 text-[13px] font-semibold disabled:opacity-60"
+        >
+          Payer
+        </button>
+        <button
+          type="button"
+          [disabled]="cancelling()"
+          (click)="cancel(reservation)"
+          class="flex h-12.5 items-center justify-center rounded-[3px] border border-line px-6 text-[13px] font-semibold hover:border-cream disabled:opacity-60"
+        >
+          Annuler
+        </button>
+      </div>
+      @if (error(); as message) {
+        <p role="alert" class="text-sm text-brand">{{ message }}</p>
+      }
       <p class="text-xs text-muted">Le paiement en ligne sera disponible prochainement.</p>
     }
   }

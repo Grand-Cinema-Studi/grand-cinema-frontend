@@ -10,6 +10,11 @@ const messages = new Map<string, string>([
   ['/errors/screening-started', 'Cette séance a déjà commencé.'],
   ['/errors/screening-not-found', "Cette séance n'existe plus."],
   ['/errors/reservation-not-found', 'Cette réservation est introuvable.'],
+  ['/errors/reservation-confirmed', 'Une réservation payée ne peut pas être annulée en ligne.'],
+  [
+    '/errors/seat-limit-reached',
+    'Vous avez déjà le nombre maximum de places (10, bloquées ou payées) pour cette séance.',
+  ],
 ]);
 
 const unavailable = 'Le service est momentanément indisponible. Réessayez dans quelques instants.';

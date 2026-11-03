@@ -159,9 +159,9 @@ public/
 
 | User story | Écran | API | État |
 |---|---|---|---|
-| US 1.1 | Accueil (`/`) : carrousel des films à la une (4 premiers films du jour), barre « Votre prochaine évasion » (date, film), programmation d'un jour : films et séances (heure, salle), choix du jour parmi les 7 prochains, filtre par genre, 6 films par page | `GET /api/schedule?date=` | ✅ |
+| US 1.1 | Accueil (`/`) : carrousel des films à la une (4 premiers films du jour qui ont encore une séance), barre « Votre prochaine évasion » (date, film), programmation d'un jour : films et séances pas encore commencées (heure, salle), « Plus aucune séance aujourd'hui » le soir venu, choix du jour parmi les 7 prochains, filtre par genre, 6 films par page | `GET /api/schedule?date=` | ✅ |
 | US 1.1 | Tous les films à l'affiche (`/movies`), 6 films par page | `GET /api/movies` | ✅ |
-| US 1.1 | Fiche d'un film (`/movies/:id`), ouverte depuis une carte de film ou « Réserver » du carrousel : informations du film et toutes ses séances à venir, jour par jour (7 jours, puis « Voir les dates suivantes »), avec les places restantes ; « Film introuvable » pour un film inconnu | `GET /api/movies/{id}` | ✅ |
+| US 1.1 | Fiche d'un film (`/movies/:id`), ouverte depuis une carte de film ou « Réserver » du carrousel : informations du film et toutes ses séances à venir, jour par jour (7 jours, puis « Voir les dates suivantes »), avec les places restantes, ou « Aucune séance à venir pour ce film » et un lien vers les films à l'affiche ; « Film introuvable » pour un film inconnu | `GET /api/movies/{id}` | ✅ |
 | US 1.1 | Accueil : champ « Autre date », d'aujourd'hui à un an plus tard (réservation longtemps à l'avance) | `GET /api/schedule?date=` | ✅ |
 | US 2.1 | Créer un compte (`/sign-up`) : prénom, nom, adresse e-mail, mot de passe de 12 caractères au moins, acceptation obligatoire de la politique de confidentialité | `POST /api/users` | ✅ |
 | US 2.1 | Se connecter (`/sign-in`), puis retour à la page demandée | `POST /api/tokens` | ✅ |

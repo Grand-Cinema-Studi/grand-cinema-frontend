@@ -27,7 +27,7 @@ describe('US 2.3 – ReservationPage', () => {
     vi.useRealTimers();
   });
 
-  async function render(reservation: Reservation) {
+  async function render(reservation: Reservation, payment?: string) {
     const reservations = {
       getReservation: vi.fn(() => of(reservation)),
       cancelHold: vi.fn(() => of(undefined)),
@@ -45,6 +45,9 @@ describe('US 2.3 – ReservationPage', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ReservationPage);
     fixture.componentRef.setInput('reservationId', 'id-hold');
+    if (payment) {
+      fixture.componentRef.setInput('payment', payment);
+    }
     await fixture.whenStable();
     return {
       fixture,
@@ -127,5 +130,29 @@ describe('US 2.3 – ReservationPage', () => {
 
     expect(reservations.startPayment).toHaveBeenCalledWith('id-hold');
     expect(externalNavigation.go).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test');
+  });
+
+  it('when the reservation is paid, then the payment is confirmed instead of the countdown', async () => {
+    const { element } = await render({ ...hold, status: 'Confirmed' });
+
+    expect(element.querySelector('h1')?.textContent).toContain('Paiement confirmé');
+    expect(element.textContent).toContain('A1, A2');
+    expect(element.querySelector('[data-countdown]')).toBeNull();
+    expect(button(element, 'Annuler')).toBeUndefined();
+  });
+
+  it('when the customer comes back from Stripe before the confirmation, then the page waits for it', async () => {
+    const { element, fixture, reservations } = await render(hold, 'success');
+
+    // First reading: the notification of Stripe has not arrived yet
+    vi.advanceTimersByTime(10);
+    await fixture.whenStable();
+    expect(element.querySelector('h1')?.textContent).toContain('Paiement en cours de confirmation');
+
+    // 2 seconds later, the api has received it
+    reservations.getReservation.mockReturnValue(of({ ...hold, status: 'Confirmed' }));
+    vi.advanceTimersByTime(2000);
+    await fixture.whenStable();
+    expect(element.querySelector('h1')?.textContent).toContain('Paiement confirmé');
   });
 });

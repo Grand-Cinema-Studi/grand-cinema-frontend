@@ -81,6 +81,14 @@ Avec l'API du backend lancée (`dotnet run --project src/GrandCinema.Api`, sur `
 curl http://localhost:4200/api/schedule   # programmation du jour, renvoyée par l'API à travers le serveur Angular
 ```
 
+Pour essayer le paiement (US 3.1) : l'API a besoin de ses clés Stripe de test, et la [Stripe CLI](https://docs.stripe.com/stripe-cli) relaie à l'API locale les notifications de Stripe (voir le README du backend). Dans un autre terminal :
+
+```bash
+stripe listen --events checkout.session.completed --forward-to http://localhost:5073/api/payments/stripe-webhook
+```
+
+Cartes de test sur la page de Stripe : `4242 4242 4242 4242` (paiement accepté), `4000 0000 0000 0002` (carte refusée), avec une date future et un code quelconque.
+
 ## Scripts npm
 
 | Script | Rôle |
@@ -108,6 +116,7 @@ src/
     │   ├── auth/           session (AuthService), intercepteur, garde, types des échanges avec l'API
     │   ├── errors/         messages en français d'après les réponses Problem Details de l'API
     │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté), zone des pages, pied de page
+    │   ├── navigation/     sortie vers un autre site (page de paiement Stripe), remplacée par une doublure dans les tests
     │   └── not-found/      page « introuvable » (toute adresse inconnue)
     ├── shared/             réutilisé par plusieurs écrans
     │   ├── movie-card/     carte d'un film (affiche, titre, genre, durée), lien vers sa fiche
@@ -117,10 +126,10 @@ src/
         ├── schedule/       US 1.1 et 2.2 : accueil (/) : films à la une, recherche de séance, programmation d'un jour (« Autre date » jusqu'à un an), pastille de séance avec les places restantes, lien vers la réservation (partagée avec la fiche d'un film)
         ├── cinema/         présentation des salles (section statique de l'accueil)
         ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
-        ├── reservations/   US 2.3 : formulaire de réservation (fiche d'un film), page du blocage, son compte à rebours et le bouton « Annuler » (/reservations/:id)
+        ├── reservations/   US 2.3 et 3.1 : formulaire de réservation (fiche d'un film), page du blocage (/reservations/:id) : compte à rebours, « Annuler », conditions générales de vente et « Payer », paiement confirmé
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
         ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
-        └── legal/          US 2.1 : politique de confidentialité (/privacy-policy)
+        └── legal/          US 2.1 et 3.1 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale)
 public/
 ├── favicon.ico
 ├── icons/                  icônes de la maquette (copiées telles quelles dans le build)
@@ -160,7 +169,9 @@ public/
 | US 2.1 | Politique de confidentialité (`/privacy-policy`), liée depuis l'inscription et le pied de page | — | ✅ |
 | US 2.1 | En-tête : « Connexion », ou prénom de l'utilisateur une fois connecté | — | ✅ |
 | US 2.2 | Accueil : places restantes de chaque séance (« 42 places », « 1 place »), « Complet » quand il n'en reste aucune | `GET /api/schedule` (`remainingSeats`) | ✅ |
-| US 2.3 | Réserver depuis une séance : formulaire sur la fiche du film (1 à 10 places, toujours visible en faisant défiler), connexion ou création de compte puis retour au formulaire ; page du blocage (`/reservations/:id`) avec places, montant et compte à rebours de 10 minutes, bouton « Annuler » qui libère aussitôt les places et ramène à la fiche du film, puis message quand les places sont libérées ; messages pour « plus assez de places », « séance commencée » et la limite de 10 places par compte et par séance | `POST /api/reservations`, `GET /api/reservations/{id}`, `DELETE /api/reservations/{id}` | ✅ (paiement : US 3.1) |
+| US 2.3 | Réserver depuis une séance : formulaire sur la fiche du film (1 à 10 places, toujours visible en faisant défiler), connexion ou création de compte puis retour au formulaire ; page du blocage (`/reservations/:id`) avec places, montant et compte à rebours de 10 minutes, bouton « Annuler » qui libère aussitôt les places et ramène à la fiche du film, puis message quand les places sont libérées ; messages pour « plus assez de places », « séance commencée » et la limite de 10 places par compte et par séance | `POST /api/reservations`, `GET /api/reservations/{id}`, `DELETE /api/reservations/{id}` | ✅ |
+| US 3.1 | Payer depuis la page du blocage : case « J'accepte les conditions générales de vente » obligatoire (lien vers `/terms-of-sale`, ouvert dans un nouvel onglet), « Payer » ouvre la page de paiement Stripe, où la carte est saisie ; au retour, « Paiement en cours de confirmation » le temps que Stripe notifie l'API, puis « Paiement confirmé » avec places et montant ; messages pour un blocage expiré et une réservation déjà payée | `POST /api/reservations/{id}/payment`, `GET /api/reservations/{id}` | ✅ |
+| US 3.1 | Conditions générales de vente (`/terms-of-sale`), liées depuis la page du blocage et le pied de page | — | ✅ |
 
 Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 

@@ -12,7 +12,30 @@
   }
 
   @if (reservation(); as reservation) {
-    @if (expired()) {
+    @if (reservation.status === 'Confirmed') {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">Paiement confirmé</h1>
+      <p role="status" class="text-sm">
+        Votre réservation est enregistrée. Votre billet, avec son QR code, s'affichera sur cette
+        page.
+      </p>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+        <dt class="text-muted">Places</dt>
+        <dd>{{ reservation.seats.join(', ') }}</dd>
+        <dt class="text-muted">Montant payé</dt>
+        <dd>{{ reservation.totalAmount | currency: 'EUR' }}</dd>
+      </dl>
+      <a [routerLink]="['/movies', reservation.movieId]" class="text-[13px] underline">
+        Retour au film
+      </a>
+    } @else if (confirming()) {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">
+        Paiement en cours de confirmation
+      </h1>
+      <p role="status" class="text-muted">
+        Stripe nous confirme votre paiement : cela prend quelques secondes. Si la confirmation
+        tarde, rechargez la page.
+      </p>
+    } @else if (expired()) {
       <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">Places libérées</h1>
       <p role="alert" class="text-muted">
         Le délai de 10 minutes est écoulé sans paiement : vos places ont été libérées.
@@ -38,17 +61,32 @@
         <strong data-countdown class="font-display text-3xl text-brand">{{ countdown() }}</strong>
         pour payer. Passé ce délai, vos places sont libérées.
       </p>
+      <label class="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          class="mt-1 size-4 accent-brand"
+          [checked]="termsAccepted()"
+          (change)="acceptTerms($event)"
+        />
+        <span>
+          J'ai lu et j'accepte les
+          <a routerLink="/terms-of-sale" target="_blank" class="underline hover:text-cream"
+            >conditions générales de vente</a
+          >.
+        </span>
+      </label>
       <div class="flex flex-wrap gap-3">
         <button
           type="button"
-          disabled
-          class="flex h-12.5 items-center justify-center rounded-[3px] bg-brand px-6 text-[13px] font-semibold disabled:opacity-60"
+          [disabled]="!termsAccepted() || paying()"
+          (click)="pay(reservation)"
+          class="flex h-12.5 items-center justify-center rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
         >
           Payer
         </button>
         <button
           type="button"
-          [disabled]="cancelling()"
+          [disabled]="cancelling() || paying()"
           (click)="cancel(reservation)"
           class="flex h-12.5 items-center justify-center rounded-[3px] border border-line px-6 text-[13px] font-semibold hover:border-cream disabled:opacity-60"
         >
@@ -58,7 +96,9 @@
       @if (error(); as message) {
         <p role="alert" class="text-sm text-brand">{{ message }}</p>
       }
-      <p class="text-xs text-muted">Le paiement en ligne sera disponible prochainement.</p>
+      <p class="text-xs text-muted">
+        Paiement sécurisé par Stripe : vos données de carte ne passent jamais par nos serveurs.
+      </p>
     }
   }
 </section>

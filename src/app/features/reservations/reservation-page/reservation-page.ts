@@ -2,8 +2,9 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { catchError, map, of, startWith, switchMap, take, takeWhile, timer } from 'rxjs';
 import { problemMessage } from '../../../core/errors/problem-message';
+import { ExternalNavigation } from '../../../core/navigation/external-navigation';
 import { Reservation } from '../models/reservation';
 import { ReservationsService } from '../reservations.service';
 
@@ -20,14 +21,26 @@ export class ReservationPage {
   private readonly router = inject(Router);
   protected readonly cancelling = signal(false);
   protected readonly error = signal<string | null>(null);
+  private readonly externalNavigation = inject(ExternalNavigation);
+  protected readonly termsAccepted = signal(false);
+  protected readonly paying = signal(false);
 
   /** Identifier of the hold, read from the address /reservations/:reservationId. */
   readonly reservationId = input.required<string>();
 
+  /** "success" when Stripe sends the customer back after paying (/reservations/:id?payment=success). */
+  readonly payment = input<string>();
+
   protected readonly state = toSignal(
-    toObservable(this.reservationId).pipe(
-      switchMap((reservationId) =>
-        this.reservations.getReservation(reservationId).pipe(
+    toObservable(
+      computed(() => ({ reservationId: this.reservationId(), back: this.payment() === 'success' })),
+    ).pipe(
+      switchMap(({ reservationId, back }) =>
+        // Back from Stripe, its notification may arrive a few seconds after the customer:
+        // the reservation is read again every 2 seconds, 30 seconds at most, until it is paid
+        (back ? timer(0, 2000).pipe(take(15)) : of(0)).pipe(
+          switchMap(() => this.reservations.getReservation(reservationId)),
+          takeWhile((reservation) => back && reservation.status === 'PendingPayment', true),
           map((reservation): ReservationState => ({ status: 'loaded', reservation })),
           catchError(() => of<ReservationState>({ status: 'failed' })),
           startWith<ReservationState>({ status: 'loading' }),
@@ -61,6 +74,11 @@ export class ReservationPage {
     );
   });
 
+  /** Back from Stripe, the payment is not confirmed yet: the notification of Stripe is on its way. */
+  protected readonly confirming = computed(
+    () => this.payment() === 'success' && this.reservation()?.status === 'PendingPayment',
+  );
+
   constructor() {
     const timer = setInterval(() => this.now.set(Date.now()), 1000);
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
@@ -80,6 +98,24 @@ export class ReservationPage {
       next: () => void this.router.navigateByUrl(`/movies/${reservation.movieId}`),
       error: (error: unknown) => {
         this.cancelling.set(false);
+        this.error.set(problemMessage(error));
+      },
+    });
+  }
+
+  /** US 3.1, criterion 4: paying is possible only once the terms of sale are accepted. */
+  protected acceptTerms(event: Event): void {
+    this.termsAccepted.set((event.target as HTMLInputElement).checked);
+  }
+
+  /** Opens the payment page of Stripe: the card is typed there, never on this site (criterion 3). */
+  protected pay(reservation: Reservation): void {
+    this.paying.set(true);
+    this.error.set(null);
+    this.reservations.startPayment(reservation.reservationId).subscribe({
+      next: (page) => this.externalNavigation.go(page.checkoutUrl),
+      error: (error: unknown) => {
+        this.paying.set(false);
         this.error.set(problemMessage(error));
       },
     });

@@ -56,6 +56,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'terms-of-sale',
+    title: 'Le Grand Cinéma – Conditions générales de vente',
+    loadComponent: () =>
+      import('./features/legal/terms-of-sale-page/terms-of-sale-page').then(
+        (m) => m.TermsOfSalePage,
+      ),
+  },
+  {
     path: '**',
     title: 'Le Grand Cinéma – Page introuvable',
     loadComponent: () => import('./core/not-found/not-found').then((m) => m.NotFound),

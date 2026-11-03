@@ -15,6 +15,8 @@ const messages = new Map<string, string>([
     '/errors/seat-limit-reached',
     'Vous avez déjà le nombre maximum de places (10, bloquées ou payées) pour cette séance.',
   ],
+  ['/errors/hold-expired', 'Le délai de 10 minutes est écoulé : bloquez à nouveau vos places.'],
+  ['/errors/reservation-paid', 'Cette réservation est déjà payée.'],
 ]);
 
 const unavailable = 'Le service est momentanément indisponible. Réessayez dans quelques instants.';

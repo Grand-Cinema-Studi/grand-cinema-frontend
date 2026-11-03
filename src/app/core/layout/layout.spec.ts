@@ -62,6 +62,7 @@ describe('Layout', () => {
       ['Contact', null],
       ['À propos', null],
       ['Politique de confidentialité', '/privacy-policy'],
+      ['Conditions générales de vente', '/terms-of-sale'],
     ]);
   });
 
@@ -74,7 +75,7 @@ describe('Layout', () => {
     expect(networks).toEqual(['Instagram', 'Facebook', 'YouTube']);
     const footer = element.querySelector('footer')?.textContent;
     expect(footer).toContain('Politique de confidentialité');
-    expect(footer).toContain('Termes & conditions');
+    expect(footer).toContain('Conditions générales de vente');
     expect(footer).toContain('Cookies');
     expect(footer).toContain('© 2026 Grand Cinéma. Tous droits réservés.');
   });

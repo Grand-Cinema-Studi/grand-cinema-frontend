@@ -78,10 +78,24 @@ describe('US 1.1 – SchedulePage', () => {
     expect(cards[1].textContent).toContain('Metropolis');
   });
 
-  it('when the schedule is empty, then the "no screening" message is shown', async () => {
+  it('when today has no screening left, then the customer is invited to choose another day', async () => {
     const { element } = await render(() => of({ date: '2026-07-18', movies: [] }));
 
+    expect(element.textContent).toContain(
+      "Plus aucune séance aujourd'hui : choisissez un autre jour.",
+    );
+  });
+
+  it('when another day has no screening, then the "no screening that day" message is shown', async () => {
+    const { element, fixture } = await render((date) =>
+      of(date === '2026-07-19' ? { date: '2026-07-19', movies: [] } : today),
+    );
+
+    element.querySelector<HTMLButtonElement>('[data-day="2026-07-19"]')?.click();
+    await fixture.whenStable();
+
     expect(element.textContent).toContain("Aucune séance n'est programmée ce jour-là.");
+    expect(element.textContent).not.toContain("Plus aucune séance aujourd'hui");
   });
 
   it('when the schedule is loaded, then the day and the six following days can be chosen', async () => {

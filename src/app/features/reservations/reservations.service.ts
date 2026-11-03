@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { EMPTY, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { HoldSeatsRequest, PaymentPage, Reservation } from './models/reservation';
 
 @Injectable({ providedIn: 'root' })
@@ -22,7 +22,10 @@ export class ReservationsService {
     return this.http.delete<void>(`/api/reservations/${reservationId}`);
   }
 
+  /** Opens the payment page of a hold (US 3.1); only called once the terms of sale are accepted. */
   startPayment(reservationId: string): Observable<PaymentPage> {
-    return EMPTY;
+    return this.http.post<PaymentPage>(`/api/reservations/${reservationId}/payment`, {
+      acceptTermsOfSale: true,
+    });
   }
 }

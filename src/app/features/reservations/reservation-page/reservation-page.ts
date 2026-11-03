@@ -4,6 +4,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 import { problemMessage } from '../../../core/errors/problem-message';
+import { ExternalNavigation } from '../../../core/navigation/external-navigation';
 import { Reservation } from '../models/reservation';
 import { ReservationsService } from '../reservations.service';
 
@@ -20,6 +21,9 @@ export class ReservationPage {
   private readonly router = inject(Router);
   protected readonly cancelling = signal(false);
   protected readonly error = signal<string | null>(null);
+  private readonly externalNavigation = inject(ExternalNavigation);
+  protected readonly termsAccepted = signal(false);
+  protected readonly paying = signal(false);
 
   /** Identifier of the hold, read from the address /reservations/:reservationId. */
   readonly reservationId = input.required<string>();
@@ -80,6 +84,24 @@ export class ReservationPage {
       next: () => void this.router.navigateByUrl(`/movies/${reservation.movieId}`),
       error: (error: unknown) => {
         this.cancelling.set(false);
+        this.error.set(problemMessage(error));
+      },
+    });
+  }
+
+  /** US 3.1, criterion 4: paying is possible only once the terms of sale are accepted. */
+  protected acceptTerms(event: Event): void {
+    this.termsAccepted.set((event.target as HTMLInputElement).checked);
+  }
+
+  /** Opens the payment page of Stripe: the card is typed there, never on this site (criterion 3). */
+  protected pay(reservation: Reservation): void {
+    this.paying.set(true);
+    this.error.set(null);
+    this.reservations.startPayment(reservation.reservationId).subscribe({
+      next: (page) => this.externalNavigation.go(page.checkoutUrl),
+      error: (error: unknown) => {
+        this.paying.set(false);
         this.error.set(problemMessage(error));
       },
     });

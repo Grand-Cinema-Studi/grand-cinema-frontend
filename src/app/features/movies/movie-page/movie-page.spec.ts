@@ -105,7 +105,10 @@ describe('US 1.1 – MoviePage', () => {
     const { element } = await render(() => of(bird([])));
 
     expect(element.querySelector('h1')?.textContent?.trim()).toBe('Bird');
-    expect(element.textContent).toContain("Aucune séance n'est programmée pour ce film.");
+    expect(element.textContent).toContain('Aucune séance à venir pour ce film.');
+    expect(element.querySelector('a[href="/movies"]')?.textContent?.trim()).toBe(
+      "Voir les films à l'affiche",
+    );
     expect(moreDates(element)).toBeUndefined();
   });
 

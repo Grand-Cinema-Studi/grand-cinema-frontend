@@ -139,7 +139,13 @@
             </app-movie-card>
           </li>
         } @empty {
-          <li class="col-span-full text-muted">Aucune séance n'est programmée ce jour-là.</li>
+          <li class="col-span-full text-muted">
+            @if (selectedDay() === today() && !dayMovies().length) {
+              Plus aucune séance aujourd'hui : choisissez un autre jour.
+            } @else {
+              Aucune séance n'est programmée ce jour-là.
+            }
+          </li>
         }
       </ul>
       <app-paginator [page]="page()" [pageCount]="pageCount()" (pageChange)="choosePage($event)" />

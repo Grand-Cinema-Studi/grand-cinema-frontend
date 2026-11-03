@@ -37,7 +37,7 @@ export class Layout {
   /** A mention with a link leads to its page; the others have no page yet. */
   protected readonly legalMentions: readonly { label: string; link?: string }[] = [
     { label: 'Politique de confidentialité', link: '/privacy-policy' },
-    { label: 'Termes & conditions' },
+    { label: 'Conditions générales de vente', link: '/terms-of-sale' },
     { label: 'Cookies' },
   ];
 }

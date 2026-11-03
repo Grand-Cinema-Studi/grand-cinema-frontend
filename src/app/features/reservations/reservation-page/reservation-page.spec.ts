@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { ExternalNavigation } from '../../../core/navigation/external-navigation';
 import { Reservation } from '../models/reservation';
 import { ReservationsService } from '../reservations.service';
 import { ReservationPage } from './reservation-page';
@@ -30,16 +31,34 @@ describe('US 2.3 – ReservationPage', () => {
     const reservations = {
       getReservation: vi.fn(() => of(reservation)),
       cancelHold: vi.fn(() => of(undefined)),
+      startPayment: vi.fn(() => of({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test' })),
     };
+    const externalNavigation = { go: vi.fn() };
     TestBed.configureTestingModule({
       imports: [ReservationPage],
-      providers: [provideRouter([]), { provide: ReservationsService, useValue: reservations }],
+      providers: [
+        provideRouter([]),
+        { provide: ReservationsService, useValue: reservations },
+        { provide: ExternalNavigation, useValue: externalNavigation },
+      ],
     });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const fixture = TestBed.createComponent(ReservationPage);
     fixture.componentRef.setInput('reservationId', 'id-hold');
     await fixture.whenStable();
-    return { fixture, element: fixture.nativeElement as HTMLElement, reservations, navigate };
+    return {
+      fixture,
+      element: fixture.nativeElement as HTMLElement,
+      reservations,
+      navigate,
+      externalNavigation,
+    };
+  }
+
+  function button(element: HTMLElement, label: string): HTMLButtonElement | undefined {
+    return Array.from(element.querySelectorAll('button')).find(
+      (candidate) => candidate.textContent?.trim() === label,
+    );
   }
 
   it('when the seats are held, then they are shown with the amount and the time left to pay', async () => {
@@ -89,5 +108,24 @@ describe('US 2.3 – ReservationPage', () => {
       anchor.textContent?.includes('Choisir une autre séance'),
     );
     expect(link?.getAttribute('href')).toBe('/movies/id-bird');
+  });
+
+  it('when the terms of sale are not accepted, then the customer cannot pay', async () => {
+    const { element } = await render(hold);
+
+    expect(element.querySelector('a[href="/terms-of-sale"]')).not.toBeNull();
+    expect(button(element, 'Payer')?.disabled).toBe(true);
+  });
+
+  it('when the customer accepts the terms of sale and pays, then the payment page of Stripe opens', async () => {
+    const { element, fixture, reservations, externalNavigation } = await render(hold);
+
+    element.querySelector<HTMLInputElement>('input[type="checkbox"]')?.click();
+    await fixture.whenStable();
+    button(element, 'Payer')?.click();
+    await fixture.whenStable();
+
+    expect(reservations.startPayment).toHaveBeenCalledWith('id-hold');
+    expect(externalNavigation.go).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test');
   });
 });

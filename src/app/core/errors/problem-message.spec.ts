@@ -24,6 +24,12 @@ describe('US 2.1 – problemMessage', () => {
     expect(problemMessage(problem(409, '/errors/seat-limit-reached'))).toBe(
       'Vous avez déjà le nombre maximum de places (10, bloquées ou payées) pour cette séance.',
     );
+    expect(problemMessage(problem(409, '/errors/hold-expired'))).toBe(
+      'Le délai de 10 minutes est écoulé : bloquez à nouveau vos places.',
+    );
+    expect(problemMessage(problem(409, '/errors/reservation-paid'))).toBe(
+      'Cette réservation est déjà payée.',
+    );
   });
 
   it('when there were too many attempts, then the visitor is asked to wait', () => {

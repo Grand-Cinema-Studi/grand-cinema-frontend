@@ -18,3 +18,8 @@ export interface Reservation {
   /** Instant in UTC: "2026-10-30T17:07:59.961Z". */
   expiresAt: string | null;
 }
+
+/** The payment page of Stripe (US 3.1): the card is typed there, never on this site. */
+export interface PaymentPage {
+  checkoutUrl: string;
+}

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { HoldSeatsRequest, Reservation } from './models/reservation';
+import { EMPTY, Observable } from 'rxjs';
+import { HoldSeatsRequest, PaymentPage, Reservation } from './models/reservation';
 
 @Injectable({ providedIn: 'root' })
 export class ReservationsService {
@@ -20,5 +20,9 @@ export class ReservationsService {
   /** Cancels a hold before payment: its seats are on sale again at once (204). */
   cancelHold(reservationId: string): Observable<void> {
     return this.http.delete<void>(`/api/reservations/${reservationId}`);
+  }
+
+  startPayment(reservationId: string): Observable<PaymentPage> {
+    return EMPTY;
   }
 }

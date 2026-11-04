@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
+import { roleGuard } from './core/auth/role.guard';
 
 export const routes: Routes = [
   {
@@ -61,6 +62,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/legal/terms-of-sale-page/terms-of-sale-page').then(
         (m) => m.TermsOfSalePage,
+      ),
+  },
+  {
+    path: 'programming',
+    title: 'Le Grand Cinéma – Programmation',
+    canActivate: [roleGuard('Manager')],
+    loadComponent: () =>
+      import('./features/programming/programming-page/programming-page').then(
+        (m) => m.ProgrammingPage,
       ),
   },
   {

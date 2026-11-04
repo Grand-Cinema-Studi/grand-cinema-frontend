@@ -1,0 +1,200 @@
+<section class="mx-auto flex w-full max-w-360 flex-col gap-8 px-5 py-10 md:px-16 md:py-15">
+  <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <h1 class="font-display text-5xl leading-none uppercase md:text-7xl">Programmation</h1>
+    @if (programming(); as current) {
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Jour</span>
+        <input
+          type="date"
+          name="day"
+          [value]="current.date"
+          (change)="load($any($event.target).value)"
+          class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+        />
+      </label>
+    }
+  </div>
+
+  @if (error(); as message) {
+    <p role="alert" class="text-sm text-brand">{{ message }}</p>
+  }
+
+  @if (pending(); as change) {
+    <div role="alertdialog" class="flex flex-col gap-3 rounded-[3px] border border-brand p-4">
+      <p class="text-sm">
+        Cette séance a {{ change.screening.takenSeats }} place(s) bloquée(s) ou vendue(s). Les
+        spectateurs concernés devront être prévenus.
+      </p>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          (click)="confirmPending()"
+          class="h-11 rounded-[3px] bg-brand px-5 text-[13px] font-semibold hover:brightness-110"
+        >
+          Confirmer
+        </button>
+        <button
+          type="button"
+          (click)="pending.set(null)"
+          class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+        >
+          Ne rien changer
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (failed()) {
+    <p role="alert" class="text-muted">
+      La programmation est momentanément indisponible. Réessayez dans quelques instants.
+    </p>
+  } @else if (programming(); as current) {
+    <ul class="flex flex-col gap-3">
+      @for (screening of current.screenings; track screening.screeningId) {
+        <li
+          [attr.data-screening]="screening.screeningId"
+          class="flex flex-col gap-3 rounded-[3px] border border-line p-4 md:flex-row md:items-center md:justify-between"
+        >
+          <div class="flex flex-col gap-1">
+            <p class="text-sm font-semibold">
+              {{ screening.startsAt | date: 'HH:mm' }} · {{ screening.movieTitle }}
+            </p>
+            <p class="text-xs text-muted">
+              {{ screening.roomName }} · {{ screening.price | currency: 'EUR' }} ·
+              {{ screening.takenSeats }} / {{ screening.capacity }} places prises
+            </p>
+          </div>
+
+          @if (hasStarted(screening)) {
+            <p class="text-xs text-muted uppercase">Commencée</p>
+          } @else if (editedId() === screening.screeningId) {
+            <form
+              name="edit-screening"
+              (submit)="$event.preventDefault(); move(screening)"
+              class="flex flex-wrap items-end gap-3"
+            >
+              <input
+                type="date"
+                name="day"
+                aria-label="Nouveau jour"
+                [value]="editedDay()"
+                (input)="editedDay.set($any($event.target).value)"
+                class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+              />
+              <input
+                type="time"
+                name="time"
+                aria-label="Nouvelle heure"
+                [value]="editedTime()"
+                (input)="editedTime.set($any($event.target).value)"
+                class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+              />
+              <input
+                type="number"
+                name="price"
+                aria-label="Nouveau prix"
+                min="0.5"
+                step="0.5"
+                [value]="editedPrice()"
+                (input)="editedPrice.set(+$any($event.target).value)"
+                class="h-11 w-24 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+              />
+              <button
+                type="submit"
+                class="h-11 rounded-[3px] bg-brand px-5 text-[13px] font-semibold hover:brightness-110"
+              >
+                Enregistrer
+              </button>
+            </form>
+          } @else {
+            <div class="flex gap-3">
+              <button
+                type="button"
+                (click)="edit(screening)"
+                class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+              >
+                Modifier
+              </button>
+              <button
+                type="button"
+                (click)="cancel(screening)"
+                class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+              >
+                Annuler la séance
+              </button>
+            </div>
+          }
+        </li>
+      } @empty {
+        <li class="text-muted">Aucune séance n'est programmée ce jour-là.</li>
+      }
+    </ul>
+
+    <form
+      name="new-screening"
+      (submit)="$event.preventDefault(); add()"
+      class="flex flex-col gap-4 rounded-[3px] border border-line p-4 md:flex-row md:flex-wrap md:items-end"
+    >
+      <h2 class="w-full text-[11px] font-semibold uppercase">
+        Nouvelle séance le {{ current.date | date: 'd MMMM y' }}
+      </h2>
+      <label class="flex flex-col gap-1.5 md:flex-1">
+        <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Film</span>
+        <select
+          name="movieId"
+          (change)="movieId.set($any($event.target).value)"
+          class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
+        >
+          <option value="">Choisir un film</option>
+          @for (movie of current.movies; track movie.movieId) {
+            <option [value]="movie.movieId">
+              {{ movie.title }} ({{ movie.durationMinutes }} min)
+            </option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Salle</span>
+        <select
+          name="roomId"
+          (change)="roomId.set($any($event.target).value)"
+          class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
+        >
+          <option value="">Choisir une salle</option>
+          @for (room of current.rooms; track room.roomId) {
+            <option [value]="room.roomId">{{ room.name }} ({{ room.capacity }} places)</option>
+          }
+        </select>
+      </label>
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Heure</span>
+        <input
+          type="time"
+          name="time"
+          [value]="time()"
+          (input)="time.set($any($event.target).value)"
+          class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+        />
+      </label>
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Prix</span>
+        <input
+          type="number"
+          name="price"
+          min="0.5"
+          step="0.5"
+          [value]="price()"
+          (input)="price.set(+$any($event.target).value)"
+          class="h-11 w-24 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+        />
+      </label>
+      <button
+        type="submit"
+        [disabled]="!movieId() || !roomId()"
+        class="h-11 rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
+      >
+        Ajouter la séance
+      </button>
+    </form>
+  }
+</section>

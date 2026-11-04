@@ -5,11 +5,13 @@
     >
       <a
         routerLink="/"
+        (click)="menuOpen.set(false)"
         class="font-display text-[32px] leading-none whitespace-nowrap uppercase md:text-[42px]"
       >
         Grand Cinéma
       </a>
-      <div class="flex items-center gap-4 md:gap-8">
+      <!-- Tablet and desktop: the links stay in the header -->
+      <div class="hidden items-center gap-8 md:flex">
         @if (auth.user(); as user) {
           @if (user.role === 'Manager') {
             <a
@@ -43,7 +45,86 @@
           <img src="icons/ticket.svg" alt="" width="17" height="17" class="hidden md:block" />
         </a>
       </div>
+      <!-- Phones: a button opens the menu below the header -->
+      <button
+        type="button"
+        aria-controls="mobile-menu"
+        [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="menuOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
+        (click)="menuOpen.set(!menuOpen())"
+        class="flex size-11 items-center justify-center md:hidden"
+      >
+        @if (menuOpen()) {
+          <svg
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        } @else {
+          <svg
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        }
+      </button>
     </div>
+    @if (menuOpen()) {
+      <nav
+        id="mobile-menu"
+        aria-label="Menu"
+        class="flex flex-col border-t border-line px-5 pt-2 pb-5 md:hidden"
+      >
+        @if (auth.user(); as user) {
+          @if (user.role === 'Manager') {
+            <a
+              routerLink="/programming"
+              (click)="menuOpen.set(false)"
+              class="py-3 text-sm font-semibold uppercase hover:text-muted"
+            >
+              Programmation
+            </a>
+          }
+          <a
+            routerLink="/account"
+            (click)="menuOpen.set(false)"
+            class="py-3 text-sm font-semibold uppercase hover:text-muted"
+          >
+            Mon compte ({{ user.firstName }})
+          </a>
+        } @else {
+          <a
+            routerLink="/sign-in"
+            (click)="menuOpen.set(false)"
+            class="py-3 text-sm font-semibold uppercase hover:text-muted"
+          >
+            Connexion
+          </a>
+        }
+        <a
+          routerLink="/"
+          (click)="menuOpen.set(false)"
+          class="mt-3 flex h-11 items-center justify-center gap-2.25 rounded-[3px] bg-brand px-3 text-[13px] font-semibold hover:brightness-110"
+        >
+          Acheter un billet
+          <img src="icons/ticket-mobile.svg" alt="" width="15" height="15" />
+        </a>
+      </nav>
+    }
   </header>
 
   <main class="flex-1">

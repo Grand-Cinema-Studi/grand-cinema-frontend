@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 
@@ -15,6 +15,8 @@ interface FooterGroup {
 })
 export class Layout {
   protected readonly auth = inject(AuthService);
+  /** Phones only: the menu of the header, opened by its button. */
+  protected readonly menuOpen = signal(false);
 
   protected readonly footerGroups: readonly FooterGroup[] = [
     {

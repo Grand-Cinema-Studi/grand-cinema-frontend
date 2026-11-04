@@ -38,6 +38,8 @@ const conflict = (type: string) =>
   throwError(() => new HttpErrorResponse({ status: 409, error: { type } }));
 
 describe('US 5.2 – ProgrammingPage', () => {
+  afterEach(() => vi.useRealTimers());
+
   async function render(
     options: {
       programming?: Programming;
@@ -106,7 +108,7 @@ describe('US 5.2 – ProgrammingPage', () => {
     expect(service.getProgramming).toHaveBeenLastCalledWith('2032-03-15');
   });
 
-  it('when the room is not available, then the french message is shown', async () => {
+  it('when the room is not available, then the french message is shown under the form', async () => {
     const { element, fill, fixture } = await render({
       createScreening: () => conflict('/errors/room-not-available'),
     });
@@ -117,7 +119,7 @@ describe('US 5.2 – ProgrammingPage', () => {
     form.dispatchEvent(new Event('submit'));
     await fixture.whenStable();
 
-    expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+    expect(element.querySelector('aside [role="alert"]')?.textContent).toContain(
       'La salle est déjà occupée à cette heure',
     );
   });
@@ -138,7 +140,7 @@ describe('US 5.2 – ProgrammingPage', () => {
     );
   });
 
-  it('when seats are taken, then the manager is warned and the change is sent again once confirmed', async () => {
+  it('when seats are taken, then the manager is warned under the screening and the change is sent again once confirmed', async () => {
     const { element, service, click } = await render({
       programming: day('2032-03-15', 3),
       cancelScreening: (_id, confirmed) =>
@@ -150,7 +152,9 @@ describe('US 5.2 – ProgrammingPage', () => {
     // Criterion 3: nothing is cancelled yet, the number of seats is shown
     expect(service.cancelScreening).toHaveBeenCalledTimes(1);
     expect(
-      element.querySelector('[role="alertdialog"]')?.textContent?.replace(/\s+/g, ' '),
+      element
+        .querySelector('[data-screening="id-bird"] [role="alertdialog"]')
+        ?.textContent?.replace(/\s+/g, ' '),
     ).toContain('3 place(s) bloquée(s) ou vendue(s)');
 
     await click('Confirmer');
@@ -159,8 +163,32 @@ describe('US 5.2 – ProgrammingPage', () => {
     expect(element.querySelector('[role="alertdialog"]')).toBeNull();
   });
 
-  it('when a screening has started, then it can be neither modified nor cancelled', async () => {
+  it('when a change is refused, then the french message is shown under the screening', async () => {
+    const { element, click } = await render({
+      cancelScreening: () => conflict('/errors/screening-started'),
+    });
+
+    await click('Annuler la séance');
+
+    expect(
+      element.querySelector('[data-screening="id-bird"] [role="alert"]')?.textContent,
+    ).toContain('Cette séance a déjà commencé.');
+    expect(element.querySelector('aside [role="alert"]')).toBeNull();
+  });
+
+  it('when a screening is over, then it is shown as ended and can be neither modified nor cancelled', async () => {
     const { element } = await render({ programming: day('2020-03-15') });
+
+    const row = element.querySelector('[data-screening="id-bird"]');
+    expect(row?.textContent).toContain('Terminée');
+    expect(row?.querySelector('button')).toBeNull();
+  });
+
+  it('when the movie of a screening is playing, then it is shown as started and can be neither modified nor cancelled', async () => {
+    // 21:00 on the day: Bird (161 minutes) started at 20:30 and ends at 23:11
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2032, 2, 15, 21, 0, 0));
+    const { element } = await render({ programming: day('2032-03-15') });
 
     const row = element.querySelector('[data-screening="id-bird"]');
     expect(row?.textContent).toContain('Commencée');

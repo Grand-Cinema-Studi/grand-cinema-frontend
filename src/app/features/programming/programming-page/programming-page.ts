@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { problemMessage } from '../../../core/errors/problem-message';
-import { ProgrammedScreening, Programming } from '../models/programming';
+import { ProgrammedScreening, Programming, ProgrammingMovie } from '../models/programming';
 import { ProgrammingService } from '../programming.service';
 
 /** A change waiting for the confirmation of the manager, because seats are held or sold (criterion 3). */
@@ -11,6 +11,15 @@ interface PendingChange {
   screening: ProgrammedScreening;
   /** Sends the same change again, confirmed. */
   confirm: () => void;
+}
+
+/** Where a screening stands: still to come, started (its movie is playing), or ended. */
+type ScreeningState = 'upcoming' | 'started' | 'ended';
+
+/** A refused change of a screening, shown under it. */
+interface RowError {
+  screeningId: string;
+  message: string;
 }
 
 @Component({
@@ -23,7 +32,10 @@ export class ProgrammingPage {
 
   protected readonly programming = signal<Programming | null>(null);
   protected readonly failed = signal(false);
-  protected readonly error = signal<string | null>(null);
+  /** A refused new screening, shown under the form. */
+  protected readonly addError = signal<string | null>(null);
+  /** A refused change or cancellation, shown under its screening. */
+  protected readonly rowError = signal<RowError | null>(null);
   protected readonly pending = signal<PendingChange | null>(null);
 
   // The form of a new screening, on the displayed day
@@ -53,8 +65,16 @@ export class ProgrammingPage {
     });
   }
 
-  protected hasStarted(screening: ProgrammedScreening): boolean {
-    return new Date(screening.startsAt).getTime() <= Date.now();
+  protected stateOf(screening: ProgrammedScreening, movies: ProgrammingMovie[]): ScreeningState {
+    const startsAt = new Date(screening.startsAt).getTime();
+    const now = Date.now();
+    if (now < startsAt) {
+      return 'upcoming';
+    }
+    // The length of its movie comes from the catalog sent with the day
+    const minutes =
+      movies.find((movie) => movie.movieId === screening.movieId)?.durationMinutes ?? 0;
+    return now < startsAt + minutes * 60_000 ? 'started' : 'ended';
   }
 
   protected add(): void {
@@ -69,6 +89,7 @@ export class ProgrammingPage {
         startsAt: `${date}T${this.time()}:00`,
         price: this.price(),
       }),
+      {},
     );
   }
 
@@ -103,9 +124,16 @@ export class ProgrammingPage {
     change?.confirm();
   }
 
-  /** On success the day is read again; on "screening-has-reservations" the manager is asked to confirm. */
-  private send(change: Observable<unknown>, ifWarned?: PendingChange): void {
-    this.error.set(null);
+  /**
+   * On success the day is read again. On "screening-has-reservations" the manager is asked to confirm, under the screening;
+   * any other refusal is shown under the screening concerned, or under the form for a new screening.
+   */
+  private send(
+    change: Observable<unknown>,
+    about: { screening?: ProgrammedScreening; confirm?: () => void },
+  ): void {
+    this.addError.set(null);
+    this.rowError.set(null);
     this.pending.set(null);
     change.subscribe({
       next: () => {
@@ -113,11 +141,17 @@ export class ProgrammingPage {
         this.load(this.programming()?.date);
       },
       error: (error: unknown) => {
-        if (ifWarned && isWarning(error)) {
-          this.pending.set(ifWarned);
+        const { screening, confirm } = about;
+        if (screening && confirm && isWarning(error)) {
+          this.pending.set({ screening, confirm });
           return;
         }
-        this.error.set(problemMessage(error));
+        const message = problemMessage(error);
+        if (screening) {
+          this.rowError.set({ screeningId: screening.screeningId, message });
+        } else {
+          this.addError.set(message);
+        }
       },
     });
   }

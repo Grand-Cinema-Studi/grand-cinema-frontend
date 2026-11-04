@@ -17,6 +17,12 @@ const messages = new Map<string, string>([
   ],
   ['/errors/hold-expired', 'Le délai de 10 minutes est écoulé : bloquez à nouveau vos places.'],
   ['/errors/reservation-paid', 'Cette réservation est déjà payée.'],
+  [
+    '/errors/room-not-available',
+    'La salle est déjà occupée à cette heure (nettoyage de 15 minutes compris).',
+  ],
+  ['/errors/room-not-found', "Cette salle n'existe plus."],
+  ['/errors/movie-not-found', "Ce film n'existe plus."],
 ]);
 
 const unavailable = 'Le service est momentanément indisponible. Réessayez dans quelques instants.';

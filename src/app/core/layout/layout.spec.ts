@@ -94,5 +94,14 @@ describe('Layout', () => {
     // "Mon compte :" is only read by screen readers: the visible text is the first name
     expect(link?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Mon compte : Léa');
     expect(element.querySelector('header a[href="/sign-in"]')).toBeNull();
+    expect(element.querySelector('header a[href="/programming"]')).toBeNull();
+  });
+
+  it('when the manager is signed in, then the header leads to the programming', async () => {
+    const element = await render({ ...lea, firstName: 'Claire', role: 'Manager' });
+
+    expect(element.querySelector('header a[href="/programming"]')?.textContent?.trim()).toBe(
+      'Programmation',
+    );
   });
 });

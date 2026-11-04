@@ -11,6 +11,14 @@
       </a>
       <div class="flex items-center gap-4 md:gap-8">
         @if (auth.user(); as user) {
+          @if (user.role === 'Manager') {
+            <a
+              routerLink="/programming"
+              class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+            >
+              Programmation
+            </a>
+          }
           <a
             routerLink="/account"
             [title]="user.firstName"

@@ -22,4 +22,10 @@
   body {
     @apply bg-surface font-sans text-cream antialiased;
   }
+
+  /* Date and time fields: light calendar and clock icons, and a dark picker, on the dark theme */
+  input[type='date'],
+  input[type='time'] {
+    color-scheme: dark;
+  }
 }

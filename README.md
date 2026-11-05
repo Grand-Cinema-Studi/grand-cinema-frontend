@@ -111,11 +111,11 @@ src/
 └── app/
     ├── app.ts              composant racine, affiche la mise en page
     ├── app.config.ts       providers globaux : routeur (paramètres d'adresse passés aux pages en entrées), HttpClient avec l'intercepteur, affichage en français
-    ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account et /reservations/:id protégées par authGuard
+    ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account et /reservations/:id protégées par authGuard, /programming par roleGuard('Manager')
     ├── core/               éléments techniques communs
-    │   ├── auth/           session (AuthService), intercepteur, garde, types des échanges avec l'API
+    │   ├── auth/           session (AuthService), intercepteur, gardes (connexion ; rôle, pour les écrans du personnel), types des échanges avec l'API
     │   ├── errors/         messages en français d'après les réponses Problem Details de l'API
-    │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté), zone des pages, pied de page
+    │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté ; « Programmation » pour le responsable ; menu sur téléphone), zone des pages, pied de page
     │   ├── navigation/     sortie vers un autre site (page de paiement Stripe), remplacée par une doublure dans les tests
     │   └── not-found/      page « introuvable » (toute adresse inconnue)
     ├── shared/             réutilisé par plusieurs écrans
@@ -127,6 +127,7 @@ src/
         ├── cinema/         présentation des salles (section statique de l'accueil)
         ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
         ├── reservations/   US 2.3 et 3.1 : formulaire de réservation (fiche d'un film), page du blocage (/reservations/:id) : compte à rebours, « Annuler », conditions générales de vente et « Payer », paiement confirmé
+        ├── programming/    US 5.2 : programmation pour le responsable (/programming) : ajouter, déplacer, annuler des séances
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
         ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
         └── legal/          US 2.1 et 3.1 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale)
@@ -159,7 +160,7 @@ public/
 
 | User story | Écran | API | État |
 |---|---|---|---|
-| US 1.1 | Accueil (`/`) : carrousel des films à la une (4 premiers films du jour qui ont encore une séance), barre « Votre prochaine évasion » (date, film), programmation d'un jour : films et séances pas encore commencées (heure, salle), « Plus aucune séance aujourd'hui » le soir venu, choix du jour parmi les 7 prochains, filtre par genre, 6 films par page | `GET /api/schedule?date=` | ✅ |
+| US 1.1 | Accueil (`/`) : carrousel des films à la une (4 films, ceux dont la prochaine séance est la plus proche, à toute heure), barre « Votre prochaine évasion » (date, film), programmation d'un jour : films et séances pas encore commencées (heure, salle), « Plus aucune séance aujourd'hui » le soir venu, choix du jour parmi les 7 prochains, filtre par genre, 6 films par page | `GET /api/schedule?date=`, `GET /api/movies/featured` | ✅ |
 | US 1.1 | Tous les films à l'affiche (`/movies`), 6 films par page | `GET /api/movies` | ✅ |
 | US 1.1 | Fiche d'un film (`/movies/:id`), ouverte depuis une carte de film ou « Réserver » du carrousel : informations du film et toutes ses séances à venir, jour par jour (7 jours, puis « Voir les dates suivantes »), avec les places restantes, ou « Aucune séance à venir pour ce film » et un lien vers les films à l'affiche ; « Film introuvable » pour un film inconnu | `GET /api/movies/{id}` | ✅ |
 | US 1.1 | Accueil : champ « Autre date », d'aujourd'hui à un an plus tard (réservation longtemps à l'avance) | `GET /api/schedule?date=` | ✅ |
@@ -167,11 +168,12 @@ public/
 | US 2.1 | Se connecter (`/sign-in`), puis retour à la page demandée | `POST /api/tokens` | ✅ |
 | US 2.1 | Mon compte (`/account`, réservé aux utilisateurs connectés) : profil, déconnexion, suppression du compte après confirmation | `GET /api/users/me`, `DELETE /api/users/me` | ✅ |
 | US 2.1 | Politique de confidentialité (`/privacy-policy`), liée depuis l'inscription et le pied de page | — | ✅ |
-| US 2.1 | En-tête : « Connexion », ou prénom de l'utilisateur une fois connecté | — | ✅ |
+| US 2.1 | En-tête : « Connexion », ou prénom de l'utilisateur une fois connecté ; sur téléphone, ces liens passent dans un menu (bouton à trois traits) | — | ✅ |
 | US 2.2 | Accueil : places restantes de chaque séance (« 42 places », « 1 place »), « Complet » quand il n'en reste aucune | `GET /api/schedule` (`remainingSeats`) | ✅ |
 | US 2.3 | Réserver depuis une séance : formulaire sur la fiche du film (1 à 10 places, toujours visible en faisant défiler), connexion ou création de compte puis retour au formulaire ; page du blocage (`/reservations/:id`) avec places, montant et compte à rebours de 10 minutes, bouton « Annuler » qui libère aussitôt les places et ramène à la fiche du film, puis message quand les places sont libérées ; messages pour « plus assez de places », « séance commencée » et la limite de 10 places par compte et par séance | `POST /api/reservations`, `GET /api/reservations/{id}`, `DELETE /api/reservations/{id}` | ✅ |
 | US 3.1 | Payer depuis la page du blocage : case « J'accepte les conditions générales de vente » obligatoire (lien vers `/terms-of-sale`, ouvert dans un nouvel onglet), « Payer » ouvre la page de paiement Stripe, où la carte est saisie ; au retour, « Paiement en cours de confirmation » le temps que Stripe notifie l'API, puis « Paiement confirmé » avec places et montant ; messages pour un blocage expiré et une réservation déjà payée | `POST /api/reservations/{id}/payment`, `GET /api/reservations/{id}` | ✅ |
 | US 3.1 | Conditions générales de vente (`/terms-of-sale`), liées depuis la page du blocage et le pied de page | — | ✅ |
+| US 5.2 | Programmation (`/programming`, réservée au responsable, lien « Programmation » dans l'en-tête) : séances d'un jour avec places prises sur la capacité, « Commencée » ou « Terminée » ; ajout d'une séance (film, salle, heure, prix) dans un formulaire qui reste visible à droite ; modification de l'heure et du prix, annulation ; avertissement avec « Confirmer » quand des places sont bloquées ou vendues ; messages sous la séance ou sous le formulaire concerné | `GET /api/programming`, `POST /api/programming/screenings`, `PUT` et `DELETE /api/programming/screenings/{id}` | ✅ |
 
 Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 

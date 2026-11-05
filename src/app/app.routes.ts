@@ -74,6 +74,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'tracking',
+    title: 'Le Grand Cinéma – Suivi des réservations',
+    canActivate: [roleGuard('Manager')],
+    loadComponent: () =>
+      import('./features/tracking/tracking-page/tracking-page').then((m) => m.TrackingPage),
+  },
+  {
     path: '**',
     title: 'Le Grand Cinéma – Page introuvable',
     loadComponent: () => import('./core/not-found/not-found').then((m) => m.NotFound),

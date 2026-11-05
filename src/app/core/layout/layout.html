@@ -20,6 +20,12 @@
             >
               Programmation
             </a>
+            <a
+              routerLink="/tracking"
+              class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+            >
+              Réservations
+            </a>
           }
           <a
             routerLink="/account"
@@ -97,6 +103,13 @@
               class="py-3 text-sm font-semibold uppercase hover:text-muted"
             >
               Programmation
+            </a>
+            <a
+              routerLink="/tracking"
+              (click)="menuOpen.set(false)"
+              class="py-3 text-sm font-semibold uppercase hover:text-muted"
+            >
+              Réservations
             </a>
           }
           <a

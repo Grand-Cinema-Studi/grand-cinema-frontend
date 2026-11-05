@@ -1,0 +1,66 @@
+<section class="mx-auto flex w-full max-w-360 flex-col gap-8 px-5 py-10 md:px-16 md:py-15">
+  <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <h1 class="font-display text-5xl leading-none uppercase md:text-7xl">Suivi des réservations</h1>
+    @if (tracking(); as current) {
+      <label class="flex flex-col gap-1.5">
+        <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Jour</span>
+        <input
+          type="date"
+          name="day"
+          [value]="current.date"
+          (change)="load($any($event.target).value)"
+          class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+        />
+      </label>
+    }
+  </div>
+
+  @if (failed()) {
+    <p role="alert" class="text-muted">
+      Le suivi des réservations est momentanément indisponible. Réessayez dans quelques instants.
+    </p>
+  } @else if (tracking(); as current) {
+    @let day = total();
+    <p data-total class="text-sm">
+      <span class="font-semibold">{{ current.date | date: 'EEEE d MMMM y' }}</span> :
+      {{ day.soldSeats }} / {{ day.capacity }} places vendues ({{ day.rate }} %)
+    </p>
+
+    <ul class="flex flex-col gap-3">
+      @for (screening of current.screenings; track screening.screeningId) {
+        @let rate = fillRate(sold(screening), screening.capacity);
+        <li
+          [attr.data-screening]="screening.screeningId"
+          class="flex flex-col gap-3 rounded-[3px] border border-line p-4"
+        >
+          <div class="flex flex-col gap-1 md:flex-row md:items-baseline md:justify-between">
+            <p class="text-sm font-semibold">
+              {{ screening.startsAt | date: 'HH:mm' }} · {{ screening.movieTitle }}
+            </p>
+            <p class="text-xs text-muted">
+              {{ screening.roomName }} · {{ screening.capacity }} places
+            </p>
+          </div>
+          <div
+            class="h-2 overflow-hidden rounded-full bg-line"
+            role="meter"
+            aria-label="Taux de remplissage"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            [attr.aria-valuenow]="rate"
+          >
+            <div class="h-full bg-brand" [style.width.%]="rate"></div>
+          </div>
+          <p class="text-xs">
+            <span class="font-semibold">{{ sold(screening) }} vendues</span>
+            ({{ screening.soldOnline }} en ligne, {{ screening.soldAtCounter }} au guichet) ·
+            {{ screening.heldSeats }} bloquées · {{ screening.remainingSeats }} restantes ·
+            <span class="font-semibold">{{ rate }} %</span>
+          </p>
+        </li>
+      } @empty {
+        <li class="text-muted">Aucune séance n'est programmée ce jour-là.</li>
+      }
+    </ul>
+  }
+</section>

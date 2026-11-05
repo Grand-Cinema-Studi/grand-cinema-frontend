@@ -12,8 +12,10 @@ import {
   pageOfIndex,
 } from '../../../shared/paginator/pages';
 import { CinemaExperience } from '../../cinema/cinema-experience/cinema-experience';
+import { Movie } from '../../movies/models/movie';
+import { MoviesService } from '../../movies/movies.service';
 import { FeaturedMovies } from '../featured-movies/featured-movies';
-import { MovieSchedule, Schedule } from '../models/schedule';
+import { Schedule } from '../models/schedule';
 import { QuickBooking } from '../quick-booking/quick-booking';
 import { ScheduleService } from '../schedule.service';
 import { ScreeningSlot } from '../screening-slot/screening-slot';
@@ -22,7 +24,6 @@ type ScheduleState =
   { status: 'loading' } | { status: 'loaded'; schedule: Schedule } | { status: 'failed' };
 
 const DAYS_OFFERED = 7;
-const FEATURED_MOVIES = 4;
 
 /** Adds days to a "yyyy-MM-dd" day, without time zone: the result is the calendar day that follows. */
 function addDays(day: string, count: number): string {
@@ -52,6 +53,7 @@ function addOneYear(day: string): string {
 })
 export class SchedulePage {
   private readonly scheduleService = inject(ScheduleService);
+  private readonly moviesService = inject(MoviesService);
   private readonly scroller = inject(ViewportScroller);
   private readonly locale = inject(LOCALE_ID);
 
@@ -59,8 +61,11 @@ export class SchedulePage {
   private readonly chosenDay = signal<string | undefined>(undefined);
   /** Today in the time zone of the cinema, as returned by the API on the first load. */
   protected readonly today = signal<string | null>(null);
-  /** The first movies of today's schedule, in the order of the API: they stay featured when another day is chosen. */
-  protected readonly featured = signal<MovieSchedule[]>([]);
+  /** The featured movies of the API, read once: they do not depend on the day displayed nor on the time of day. */
+  protected readonly featured = toSignal(
+    this.moviesService.getFeaturedMovies().pipe(catchError(() => of<Movie[]>([]))),
+    { initialValue: [] as Movie[] },
+  );
   protected readonly genre = signal('');
   /** Page of the list of movies, numbered from 1; back to 1 whenever the day or the genre changes. */
   protected readonly page = signal(1);
@@ -74,7 +79,6 @@ export class SchedulePage {
           tap((schedule) => {
             if (day === undefined) {
               this.today.set(schedule.date);
-              this.featured.set(schedule.movies.slice(0, FEATURED_MOVIES));
             }
           }),
           map((schedule): ScheduleState => ({ status: 'loaded', schedule })),

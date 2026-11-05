@@ -1,7 +1,7 @@
 import { Component, computed, input, linkedSignal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { RuntimePipe } from '../../../shared/runtime.pipe';
-import { MovieSchedule } from '../models/schedule';
+import { Movie } from '../../movies/models/movie';
 
 /** Beyond this length, the title is set smaller so that it stays on two or three lines. */
 const LONG_TITLE = 16;
@@ -12,7 +12,7 @@ const LONG_TITLE = 16;
   templateUrl: './featured-movies.html',
 })
 export class FeaturedMovies {
-  readonly movies = input.required<MovieSchedule[]>();
+  readonly movies = input.required<Movie[]>();
 
   /** Back to the first movie whenever the list changes. */
   protected readonly index = linkedSignal({ source: this.movies, computation: () => 0 });

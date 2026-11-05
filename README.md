@@ -111,7 +111,7 @@ src/
 └── app/
     ├── app.ts              composant racine, affiche la mise en page
     ├── app.config.ts       providers globaux : routeur (paramètres d'adresse passés aux pages en entrées), HttpClient avec l'intercepteur, affichage en français
-    ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account et /reservations/:id protégées par authGuard, /programming par roleGuard('Manager')
+    ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account et /reservations/:id protégées par authGuard, /programming et /tracking par roleGuard('Manager')
     ├── core/               éléments techniques communs
     │   ├── auth/           session (AuthService), intercepteur, gardes (connexion ; rôle, pour les écrans du personnel), types des échanges avec l'API
     │   ├── errors/         messages en français d'après les réponses Problem Details de l'API
@@ -128,6 +128,7 @@ src/
         ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
         ├── reservations/   US 2.3 et 3.1 : formulaire de réservation (fiche d'un film), page du blocage (/reservations/:id) : compte à rebours, « Annuler », conditions générales de vente et « Payer », paiement confirmé
         ├── programming/    US 5.2 : programmation pour le responsable (/programming) : ajouter, déplacer, annuler des séances
+        ├── tracking/       US 5.3 : suivi des réservations (/tracking) : par séance, places vendues, bloquées, restantes et taux de remplissage
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
         ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
         └── legal/          US 2.1 et 3.1 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale)
@@ -174,6 +175,7 @@ public/
 | US 3.1 | Payer depuis la page du blocage : case « J'accepte les conditions générales de vente » obligatoire (lien vers `/terms-of-sale`, ouvert dans un nouvel onglet), « Payer » ouvre la page de paiement Stripe, où la carte est saisie ; au retour, « Paiement en cours de confirmation » le temps que Stripe notifie l'API, puis « Paiement confirmé » avec places et montant ; messages pour un blocage expiré et une réservation déjà payée | `POST /api/reservations/{id}/payment`, `GET /api/reservations/{id}` | ✅ |
 | US 3.1 | Conditions générales de vente (`/terms-of-sale`), liées depuis la page du blocage et le pied de page | — | ✅ |
 | US 5.2 | Programmation (`/programming`, réservée au responsable, lien « Programmation » dans l'en-tête) : séances d'un jour avec places prises sur la capacité, « Commencée » ou « Terminée » ; ajout d'une séance (film, salle, heure, prix) dans un formulaire qui reste visible à droite ; modification de l'heure et du prix, annulation ; avertissement avec « Confirmer » quand des places sont bloquées ou vendues ; messages sous la séance ou sous le formulaire concerné | `GET /api/programming`, `POST /api/programming/screenings`, `PUT` et `DELETE /api/programming/screenings/{id}` | ✅ |
+| US 5.3 | Suivi des réservations (`/tracking`, réservé au responsable, lien « Réservations » dans l'en-tête et le menu du téléphone) : pour chaque séance d'un jour, places vendues (en ligne, au guichet), bloquées, restantes, capacité et taux de remplissage avec une barre ; total de la journée en tête | `GET /api/reservation-tracking?date=` | ✅ |
 
 Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 

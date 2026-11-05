@@ -12,6 +12,11 @@ export class MoviesService {
     return this.http.get<Movie[]>('/api/movies');
   }
 
+  /** At most four movies, the nearest next screening first: the carousel of the home page. */
+  getFeaturedMovies(): Observable<Movie[]> {
+    throw new Error('Step 17 quater');
+  }
+
   /** A movie and all its upcoming screenings, grouped by day; 404 "movie-not-found" for an unknown movie. */
   getMovieDetails(movieId: string): Observable<MovieDetails> {
     return this.http.get<MovieDetails>(`/api/movies/${movieId}`);

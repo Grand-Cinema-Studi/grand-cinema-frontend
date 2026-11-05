@@ -2,6 +2,8 @@ import { ViewportScroller } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
+import { Movie } from '../../movies/models/movie';
+import { MoviesService } from '../../movies/movies.service';
 import { MovieSchedule, Schedule } from '../models/schedule';
 import { ScheduleService } from '../schedule.service';
 import { SchedulePage } from './schedule-page';
@@ -34,21 +36,24 @@ describe('US 1.1 – SchedulePage', () => {
   async function render(
     getSchedule: (date?: string) => Observable<Schedule>,
     fragment: string | null = null,
+    featured: Movie[] = today.movies,
   ) {
     const service = { getSchedule: vi.fn(getSchedule) };
+    const movies = { getFeaturedMovies: vi.fn(() => of(featured)) };
     const scroller = { scrollToAnchor: vi.fn() };
     TestBed.configureTestingModule({
       imports: [SchedulePage],
       providers: [
         provideRouter([]),
         { provide: ScheduleService, useValue: service },
+        { provide: MoviesService, useValue: movies },
         { provide: ViewportScroller, useValue: scroller },
         { provide: ActivatedRoute, useValue: { fragment: of(fragment) } },
       ],
     });
     const fixture = TestBed.createComponent(SchedulePage);
     await fixture.whenStable();
-    return { element: fixture.nativeElement as HTMLElement, fixture, service, scroller };
+    return { element: fixture.nativeElement as HTMLElement, fixture, service, movies, scroller };
   }
 
   const today: Schedule = {
@@ -155,12 +160,15 @@ describe('US 1.1 – SchedulePage', () => {
     );
   });
 
-  it('when the schedule of today is loaded, then its first four movies are featured', async () => {
-    const titles = ['Alien', 'Blue Note', 'Casablanca', 'Drive', 'Elephant'];
-    const { element } = await render(() =>
-      of({ date: '2026-07-18', movies: titles.map((title) => movie(title, 'Drame', ['20:00'])) }),
+  it('when no screening is left today, then the featured movies still come from the api', async () => {
+    const titles = ['Alien', 'Blue Note', 'Casablanca', 'Drive'];
+    const { element, movies } = await render(
+      () => of({ date: '2026-07-18', movies: [] }),
+      null,
+      titles.map((title) => movie(title, 'Drame', [])),
     );
 
+    expect(movies.getFeaturedMovies).toHaveBeenCalled();
     const featured = element.querySelector('app-featured-movies');
     expect(featured?.querySelector('h2')?.textContent?.trim()).toBe('Alien');
     expect(featured?.textContent).toContain('04');

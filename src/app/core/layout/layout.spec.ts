@@ -95,6 +95,7 @@ describe('Layout', () => {
     expect(link?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Mon compte : Léa');
     expect(element.querySelector('header a[href="/sign-in"]')).toBeNull();
     expect(element.querySelector('header a[href="/programming"]')).toBeNull();
+    expect(element.querySelector('header a[href="/tracking"]')).toBeNull();
   });
 
   it('when the manager is signed in, then the header leads to the programming', async () => {
@@ -102,6 +103,14 @@ describe('Layout', () => {
 
     expect(element.querySelector('header a[href="/programming"]')?.textContent?.trim()).toBe(
       'Programmation',
+    );
+  });
+
+  it('when the manager is signed in, then the header leads to the reservation tracking', async () => {
+    const element = await render({ ...lea, firstName: 'Claire', role: 'Manager' });
+
+    expect(element.querySelector('header a[href="/tracking"]')?.textContent?.trim()).toBe(
+      'Réservations',
     );
   });
 });

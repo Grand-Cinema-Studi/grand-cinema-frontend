@@ -14,6 +14,8 @@ describe('Layout', () => {
     role: 'Customer',
   };
 
+  beforeEach(() => localStorage.clear());
+
   async function render(user: User | null = null): Promise<HTMLElement> {
     TestBed.configureTestingModule({
       imports: [Layout],
@@ -63,6 +65,7 @@ describe('Layout', () => {
       ['À propos', null],
       ['Politique de confidentialité', '/privacy-policy'],
       ['Conditions générales de vente', '/terms-of-sale'],
+      ['Mentions légales', '/legal-notice'],
     ]);
   });
 
@@ -121,5 +124,28 @@ describe('Layout', () => {
       'Réservations',
     );
     expect(element.querySelector('header a[href="/programming"]')).toBeNull();
+  });
+
+  it('when « Cookies » is pressed in the footer, then the banner shows again', async () => {
+    localStorage.setItem(
+      'grand-cinema.cookie-consent',
+      JSON.stringify({ choice: 'accepted', at: new Date().toISOString() }),
+    );
+    TestBed.configureTestingModule({
+      imports: [Layout],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { user: signal(null), isSignedIn: signal(false) } },
+      ],
+    });
+    const fixture = TestBed.createComponent(Layout);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('[aria-labelledby="cookie-banner-title"]')).toBeNull();
+
+    element.querySelector<HTMLButtonElement>('footer button')?.click();
+    await fixture.whenStable();
+
+    expect(element.querySelector('[aria-labelledby="cookie-banner-title"]')).not.toBeNull();
   });
 });

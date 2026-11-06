@@ -55,6 +55,7 @@ Une adresse de l'application comme `/schedule` ou `/account` n'est pas un fichie
 - **Garde de rôle** (`roleGuard(...rôles)`) : un écran du personnel ne s'ouvre qu'aux rôles listés (`/programming` : le responsable ; `/tracking` : le responsable et le caissier) ; un autre rôle revient à l'accueil, un visiteur non connecté passe par la connexion. C'est un confort : l'API répond `403` aux autres rôles de toute façon.
 - **Messages d'erreur** : `problemMessage()` choisit un message en français d'après le `type` des réponses Problem Details de l'API (`/errors/email-already-used`, `/errors/invalid-credentials`…) ; `429` donne « Trop de tentatives », toute autre erreur « Le service est momentanément indisponible ». Le `title` de l'API, en anglais, n'est jamais affiché.
 - **RGPD** : l'inscription exige l'acceptation de la politique de confidentialité (case obligatoire, lien vers `/privacy-policy`) ; l'API la vérifie aussi et enregistre la version acceptée. « Mon compte » permet de supprimer son compte (`DELETE /api/users/me`), après une confirmation explicite.
+- **Cookies** : aucun cookie de mesure d'audience ni de publicité. Le bandeau de la première visite recueille le choix du visiteur (`CookieConsentService`), gardé 6 mois dans `localStorage` (clé `grand-cinema.cookie-consent`) : un outil ajouté plus tard ne se chargera que si le choix est « accepté ». Le jeton de connexion, lui, reste en `sessionStorage`.
 
 ## Lancer le projet en local
 
@@ -115,8 +116,9 @@ src/
     ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account et /reservations/:id protégées par authGuard, /programming par roleGuard('Manager'), /tracking par roleGuard('Manager', 'Cashier')
     ├── core/               éléments techniques communs
     │   ├── auth/           session (AuthService), intercepteur, gardes (connexion ; rôle, pour les écrans du personnel), types des échanges avec l'API
+    │   ├── consent/        US 1.2 : choix du visiteur sur les cookies non essentiels (gardé 6 mois), bandeau de la première visite
     │   ├── errors/         messages en français d'après les réponses Problem Details de l'API
-    │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté ; « Programmation » pour le responsable, « Réservations » pour le responsable et le caissier ; menu sur téléphone), zone des pages, pied de page
+    │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté ; « Programmation » pour le responsable, « Réservations » pour le responsable et le caissier ; menu sur téléphone), zone des pages, pied de page (mentions légales ; « Cookies » rouvre le bandeau)
     │   ├── navigation/     sortie vers un autre site (page de paiement Stripe), remplacée par une doublure dans les tests
     │   └── not-found/      page « introuvable » (toute adresse inconnue)
     ├── shared/             réutilisé par plusieurs écrans
@@ -132,7 +134,7 @@ src/
         ├── tracking/       US 5.3 et 5.1 : suivi des réservations (/tracking), pour le responsable et le caissier : par séance, places vendues, bloquées, restantes et taux de remplissage
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
         ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
-        └── legal/          US 2.1 et 3.1 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale)
+        └── legal/          US 2.1, 3.1 et 1.2 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale), mentions légales (/legal-notice)
 public/
 ├── favicon.ico
 ├── icons/                  icônes de la maquette (copiées telles quelles dans le build)
@@ -166,6 +168,8 @@ public/
 | US 1.1 | Tous les films à l'affiche (`/movies`), 6 films par page | `GET /api/movies` | ✅ |
 | US 1.1 | Fiche d'un film (`/movies/:id`), ouverte depuis une carte de film ou « Réserver » du carrousel : informations du film et toutes ses séances à venir, jour par jour (7 jours, puis « Voir les dates suivantes »), avec les places restantes, ou « Aucune séance à venir pour ce film » et un lien vers les films à l'affiche ; « Film introuvable » pour un film inconnu | `GET /api/movies/{id}` | ✅ |
 | US 1.1 | Accueil : champ « Autre date », d'aujourd'hui à un an plus tard (réservation longtemps à l'avance) | `GET /api/schedule?date=` | ✅ |
+| US 1.2 | Bandeau des cookies à la première visite : « Tout refuser » et « Tout accepter », de même style ; la page reste lisible et utilisable dessous, refuser n'empêche ni de consulter ni de réserver ; choix gardé 6 mois, « Cookies » en pied de page le rouvre | — | ✅ |
+| US 1.2 | Mentions légales (`/legal-notice`), liées depuis le pied de page : éditeur, directeur de la publication, hébergeur (AWS, région de Paris), paiement (Stripe), conception, propriété intellectuelle ; texte de démonstration, à valider par la direction | — | ✅ |
 | US 2.1 | Créer un compte (`/sign-up`) : prénom, nom, adresse e-mail, mot de passe de 12 caractères au moins, acceptation obligatoire de la politique de confidentialité | `POST /api/users` | ✅ |
 | US 2.1 | Se connecter (`/sign-in`), puis retour à la page demandée | `POST /api/tokens` | ✅ |
 | US 2.1 | Mon compte (`/account`, réservé aux utilisateurs connectés) : profil, déconnexion, suppression du compte après confirmation | `GET /api/users/me`, `DELETE /api/users/me` | ✅ |

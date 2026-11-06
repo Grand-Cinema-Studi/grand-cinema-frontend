@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { PaymentPage, Reservation } from './models/reservation';
+import { PaymentPage, Reservation, Ticket, TicketSummary } from './models/reservation';
 import { ReservationsService } from './reservations.service';
 
 describe('US 2.3 – ReservationsService', () => {
@@ -78,6 +78,42 @@ describe('US 2.3 – ReservationsService', () => {
     expect(request.request.body).toEqual({ acceptTermsOfSale: true });
     request.flush({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test' });
     expect(result).toEqual({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test' });
+    http.verify();
+  });
+
+  it('when a ticket is read, then GET /api/reservations/{id}/ticket is called', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    let result: Ticket | undefined;
+
+    TestBed.inject(ReservationsService)
+      .getTicket('id-paid')
+      .subscribe((ticket) => (result = ticket));
+
+    const request = http.expectOne('/api/reservations/id-paid/ticket');
+    expect(request.request.method).toBe('GET');
+    request.flush({ reservationId: 'id-paid' });
+    expect(result?.reservationId).toBe('id-paid');
+    http.verify();
+  });
+
+  it('when my tickets are read, then GET /api/users/me/tickets is called', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    let result: TicketSummary[] | undefined;
+
+    TestBed.inject(ReservationsService)
+      .getMyTickets()
+      .subscribe((tickets) => (result = tickets));
+
+    const request = http.expectOne('/api/users/me/tickets');
+    expect(request.request.method).toBe('GET');
+    request.flush([]);
+    expect(result).toEqual([]);
     http.verify();
   });
 });

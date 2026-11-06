@@ -1,6 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { CookieBanner } from '../consent/cookie-banner/cookie-banner';
+import { CookieConsentService } from '../consent/cookie-consent.service';
 
 interface FooterGroup {
   title: string;
@@ -9,7 +11,7 @@ interface FooterGroup {
 }
 
 @Component({
-  imports: [RouterLink, RouterOutlet],
+  imports: [CookieBanner, RouterLink, RouterOutlet],
   selector: 'app-layout',
   templateUrl: './layout.html',
 })
@@ -17,6 +19,8 @@ export class Layout {
   protected readonly auth = inject(AuthService);
   /** Phones only: the menu of the header, opened by its button. */
   protected readonly menuOpen = signal(false);
+  /** The footer button « Cookies » forgets the choice: the banner shows again. */
+  protected readonly consent = inject(CookieConsentService);
 
   protected readonly footerGroups: readonly FooterGroup[] = [
     {
@@ -36,10 +40,10 @@ export class Layout {
     { name: 'YouTube', icon: 'icons/youtube.svg' },
   ] as const;
 
-  /** A mention with a link leads to its page; the others have no page yet. */
-  protected readonly legalMentions: readonly { label: string; link?: string }[] = [
+  /** The legal pages, linked from the footer; « Cookies » is a button of the template. */
+  protected readonly legalMentions: readonly { label: string; link: string }[] = [
     { label: 'Politique de confidentialité', link: '/privacy-policy' },
     { label: 'Conditions générales de vente', link: '/terms-of-sale' },
-    { label: 'Cookies' },
+    { label: 'Mentions légales', link: '/legal-notice' },
   ];
 }

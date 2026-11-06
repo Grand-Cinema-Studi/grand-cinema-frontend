@@ -195,16 +195,19 @@
       <div class="h-px bg-line"></div>
 
       <div class="flex flex-col gap-5 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
-        <ul class="flex justify-between text-[9px] text-muted md:order-2 md:gap-6 md:text-[10px]">
+        <ul
+          class="flex flex-wrap justify-between gap-x-4 gap-y-2 text-[9px] text-muted md:order-2 md:gap-6 md:text-[10px]"
+        >
           @for (mention of legalMentions; track mention.label) {
             <li>
-              @if (mention.link) {
-                <a [routerLink]="mention.link" class="hover:text-cream">{{ mention.label }}</a>
-              } @else {
-                {{ mention.label }}
-              }
+              <a [routerLink]="mention.link" class="hover:text-cream">{{ mention.label }}</a>
             </li>
           }
+          <li>
+            <button type="button" (click)="consent.reset()" class="hover:text-cream">
+              Cookies
+            </button>
+          </li>
         </ul>
         <p class="text-[10px] text-subtle md:order-1">© 2026 Grand Cinéma. Tous droits réservés.</p>
         <p
@@ -216,4 +219,5 @@
       </div>
     </div>
   </footer>
+  <app-cookie-banner />
 </div>

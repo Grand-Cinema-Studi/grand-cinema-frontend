@@ -20,6 +20,8 @@
             >
               Programmation
             </a>
+          }
+          @if (user.role === 'Manager' || user.role === 'Cashier') {
             <a
               routerLink="/tracking"
               class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
@@ -104,6 +106,8 @@
             >
               Programmation
             </a>
+          }
+          @if (user.role === 'Manager' || user.role === 'Cashier') {
             <a
               routerLink="/tracking"
               (click)="menuOpen.set(false)"

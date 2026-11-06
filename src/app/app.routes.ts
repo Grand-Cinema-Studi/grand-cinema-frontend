@@ -76,7 +76,7 @@ export const routes: Routes = [
   {
     path: 'tracking',
     title: 'Le Grand Cinéma – Suivi des réservations',
-    canActivate: [roleGuard('Manager')],
+    canActivate: [roleGuard('Manager', 'Cashier')],
     loadComponent: () =>
       import('./features/tracking/tracking-page/tracking-page').then((m) => m.TrackingPage),
   },

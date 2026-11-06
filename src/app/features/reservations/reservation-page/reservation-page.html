@@ -14,10 +14,42 @@
   @if (reservation(); as reservation) {
     @if (reservation.status === 'Confirmed') {
       <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">Paiement confirmé</h1>
-      <p role="status" class="text-sm">
-        Votre réservation est enregistrée. Votre billet, avec son QR code, s'affichera sur cette
-        page.
-      </p>
+      <p role="status" class="text-sm">Votre réservation est enregistrée. Voici votre billet.</p>
+      @if (loadedTicket(); as ticket) {
+        <article
+          data-ticket
+          aria-label="Billet"
+          class="flex flex-col items-center gap-5 rounded-[3px] border border-line p-6 md:flex-row md:items-start"
+        >
+          @if (ticket.screeningCancelled) {
+            <p role="alert" class="text-sm text-brand">
+              Séance annulée : ce billet ne permet plus d'entrer en salle.
+            </p>
+          } @else {
+            <app-ticket-qr-code [code]="ticket.ticketCode" />
+          }
+          <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+            <dt class="text-muted">Film</dt>
+            <dd class="font-semibold">{{ ticket.movieTitle }}</dd>
+            <dt class="text-muted">Séance</dt>
+            <dd>
+              {{ ticket.startsAt | date: 'dd/MM/yyyy' }} à {{ ticket.startsAt | date: 'HH:mm' }}
+            </dd>
+            <dt class="text-muted">Salle</dt>
+            <dd>{{ ticket.roomName }}</dd>
+            <dt class="text-muted">Places</dt>
+            <dd>{{ ticket.seats.length }} places : {{ ticket.seats.join(', ') }}</dd>
+          </dl>
+        </article>
+        <p class="text-xs text-muted">
+          Présentez ce QR code à l'entrée de la salle, sur votre téléphone ou imprimé. Votre billet
+          reste accessible depuis « Mon compte ».
+        </p>
+      } @else if (ticket() === 'failed') {
+        <p role="alert" class="text-sm text-muted">
+          Votre billet est momentanément indisponible ; il reste accessible depuis « Mon compte ».
+        </p>
+      }
       <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
         <dt class="text-muted">Places</dt>
         <dd>{{ reservation.seats.join(', ') }}</dd>

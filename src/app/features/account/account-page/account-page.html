@@ -34,6 +34,43 @@
       >
         Se déconnecter
       </button>
+      <div data-tickets class="flex flex-col gap-4 border-t border-line pt-8">
+        <h2 class="text-sm font-semibold uppercase">Mes billets</h2>
+        @let myTickets = tickets();
+        @if (myTickets === null) {
+          <p role="alert" class="text-sm text-muted">
+            Vos billets sont momentanément indisponibles. Réessayez dans quelques instants.
+          </p>
+        } @else {
+          <ul class="flex flex-col gap-3">
+            @for (ticket of myTickets; track ticket.reservationId) {
+              <li
+                class="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-line p-4 text-sm"
+              >
+                <div class="flex flex-col gap-1">
+                  <span class="font-semibold">{{ ticket.movieTitle }}</span>
+                  <span class="text-muted">
+                    {{ ticket.startsAt | date: 'dd/MM/yyyy' }} à
+                    {{ ticket.startsAt | date: 'HH:mm' }} · {{ ticket.roomName }} ·
+                    {{ ticket.seatCount }} places
+                    @if (ticket.screeningCancelled) {
+                      · <span class="text-brand">Séance annulée</span>
+                    }
+                  </span>
+                </div>
+                <a
+                  [routerLink]="['/reservations', ticket.reservationId]"
+                  class="text-[13px] font-semibold underline"
+                >
+                  Voir le billet
+                </a>
+              </li>
+            } @empty {
+              <li class="text-sm text-muted">Aucun billet pour l'instant.</li>
+            }
+          </ul>
+        }
+      </div>
     }
 
     <div class="flex flex-col gap-4 border-t border-line pt-8">

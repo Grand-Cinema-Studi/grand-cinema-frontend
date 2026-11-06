@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
@@ -5,11 +6,13 @@ import { catchError, map, of, startWith } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { User } from '../../../core/auth/models/auth';
 import { problemMessage } from '../../../core/errors/problem-message';
+import { TicketSummary } from '../../reservations/models/reservation';
+import { ReservationsService } from '../../reservations/reservations.service';
 
 type ProfileState = { status: 'loading' } | { status: 'loaded'; user: User } | { status: 'failed' };
 
 @Component({
-  imports: [RouterLink],
+  imports: [DatePipe, RouterLink],
   selector: 'app-account-page',
   templateUrl: './account-page.html',
 })
@@ -24,6 +27,14 @@ export class AccountPage {
       startWith<ProfileState>({ status: 'loading' }),
     ),
     { initialValue: { status: 'loading' } as ProfileState },
+  );
+
+  /** US 3.2, criterion 2: the paid reservations of the account, each linked to its ticket. */
+  protected readonly tickets = toSignal(
+    inject(ReservationsService)
+      .getMyTickets()
+      .pipe(catchError(() => of<TicketSummary[] | null>(null))),
+    { initialValue: [] as TicketSummary[] | null },
   );
 
   /** The deletion cannot be undone: a first click only asks for a confirmation. */

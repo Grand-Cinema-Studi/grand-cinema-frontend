@@ -1,18 +1,19 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, map, of, startWith, switchMap, take, takeWhile, timer } from 'rxjs';
+import { catchError, filter, map, of, startWith, switchMap, take, takeWhile, timer } from 'rxjs';
 import { problemMessage } from '../../../core/errors/problem-message';
 import { ExternalNavigation } from '../../../core/navigation/external-navigation';
 import { Reservation } from '../models/reservation';
 import { ReservationsService } from '../reservations.service';
+import { TicketQrCode } from '../ticket-qr-code/ticket-qr-code';
 
 type ReservationState =
   { status: 'loading' } | { status: 'loaded'; reservation: Reservation } | { status: 'failed' };
 
 @Component({
-  imports: [CurrencyPipe, RouterLink],
+  imports: [CurrencyPipe, DatePipe, RouterLink, TicketQrCode],
   selector: 'app-reservation-page',
   templateUrl: './reservation-page.html',
 })
@@ -53,6 +54,23 @@ export class ReservationPage {
   protected readonly reservation = computed(() => {
     const state = this.state();
     return state.status === 'loaded' ? state.reservation : null;
+  });
+
+  /** US 3.2: the ticket, read once the reservation is paid; null while loading, 'failed' if it cannot be read. */
+  protected readonly ticket = toSignal(
+    toObservable(computed(() => this.reservation()?.status === 'Confirmed')).pipe(
+      filter((paid) => paid),
+      take(1),
+      switchMap(() => this.reservations.getTicket(this.reservationId())),
+      catchError(() => of('failed' as const)),
+    ),
+    { initialValue: null },
+  );
+
+  /** The ticket, once read: the template does not have to test the failure. */
+  protected readonly loadedTicket = computed(() => {
+    const ticket = this.ticket();
+    return ticket && ticket !== 'failed' ? ticket : null;
   });
 
   /** The current instant, refreshed every second for the countdown. */

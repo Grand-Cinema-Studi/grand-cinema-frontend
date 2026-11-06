@@ -23,3 +23,28 @@ export interface Reservation {
 export interface PaymentPage {
   checkoutUrl: string;
 }
+
+/** Same shape as TicketDto of the API (US 3.2): the ticket of a paid reservation. */
+export interface Ticket {
+  reservationId: string;
+  /** 32 hexadecimal characters, drawn when the payment was confirmed: the content of the QR code. */
+  ticketCode: string;
+  movieTitle: string;
+  /** Time of the cinema, without time zone: "2026-11-12T20:30:00". */
+  startsAt: string;
+  roomName: string;
+  /** "A1", "A2": their number is the number of seats. */
+  seats: string[];
+  /** US 5.2: the screening was cancelled after the payment. */
+  screeningCancelled: boolean;
+}
+
+/** Same shape as TicketSummaryDto of the API: a ticket in the list of my account. */
+export interface TicketSummary {
+  reservationId: string;
+  movieTitle: string;
+  startsAt: string;
+  roomName: string;
+  seatCount: number;
+  screeningCancelled: boolean;
+}

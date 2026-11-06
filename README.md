@@ -29,6 +29,7 @@ Le front ne contient aucune règle métier ni accès direct à la base de donné
 | Styles | CSS et Tailwind CSS 4, thème repris de la maquette Figma (couleurs dans `src/styles.css`), sans bibliothèque de composants, mobile d'abord (maquettes mobile 390 px et desktop 1440 px) |
 | Polices | Inter et Bebas Neue, auto-hébergées (`@fontsource`) : aucun appel à un service tiers |
 | Appels à l'API | `HttpClient` (Fetch), chemins relatifs `/api/...`, jeton ajouté par un intercepteur fonctionnel |
+| QR codes | bibliothèque `qrcode` (MIT) : le code du billet est encodé dans le navigateur, puis dessiné en SVG par un gabarit Angular (aucune image stockée, aucun HTML injecté) ; dépendance CommonJS déclarée dans `allowedCommonJsDependencies`, chargée avec la seule page d'une réservation |
 | Formulaires | Reactive Forms typés (`NonNullableFormBuilder`), mêmes limites que l'API pour aider l'utilisateur ; l'API reste seule juge |
 | Session | jeton JWT et utilisateur en `sessionStorage`, exposés par des signals (`AuthService`) ; garde de route sur les pages réservées aux utilisateurs connectés |
 | Tests | Vitest (lancé par `ng test`), environnement jsdom, couverture V8 au format LCOV |
@@ -129,11 +130,11 @@ src/
         ├── schedule/       US 1.1 et 2.2 : accueil (/) : films à la une, recherche de séance, programmation d'un jour (« Autre date » jusqu'à un an), pastille de séance avec les places restantes, lien vers la réservation (partagée avec la fiche d'un film)
         ├── cinema/         présentation des salles (section statique de l'accueil)
         ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
-        ├── reservations/   US 2.3 et 3.1 : formulaire de réservation (fiche d'un film), page du blocage (/reservations/:id) : compte à rebours, « Annuler », conditions générales de vente et « Payer », paiement confirmé
+        ├── reservations/   US 2.3, 3.1 et 3.2 : formulaire de réservation (fiche d'un film), page du blocage (/reservations/:id) : compte à rebours, « Annuler », conditions générales de vente et « Payer », paiement confirmé, puis le billet ; ticket-qr-code/ : QR code du billet en SVG
         ├── programming/    US 5.2 : programmation pour le responsable (/programming) : ajouter, déplacer, annuler des séances
         ├── tracking/       US 5.3 et 5.1 : suivi des réservations (/tracking), pour le responsable et le caissier : par séance, places vendues, bloquées, restantes et taux de remplissage
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
-        ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
+        ├── account/        US 2.1 et 3.2 : mon compte (/account) : profil, mes billets, déconnexion, suppression du compte
         └── legal/          US 2.1, 3.1 et 1.2 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale), mentions légales (/legal-notice)
 public/
 ├── favicon.ico
@@ -178,6 +179,8 @@ public/
 | US 2.2 | Accueil : places restantes de chaque séance (« 42 places », « 1 place »), « Complet » quand il n'en reste aucune | `GET /api/schedule` (`remainingSeats`) | ✅ |
 | US 2.3 | Réserver depuis une séance : formulaire sur la fiche du film (1 à 10 places, toujours visible en faisant défiler), connexion ou création de compte puis retour au formulaire ; page du blocage (`/reservations/:id`) avec places, montant et compte à rebours de 10 minutes, bouton « Annuler » qui libère aussitôt les places et ramène à la fiche du film, puis message quand les places sont libérées ; messages pour « plus assez de places », « séance commencée » et la limite de 10 places par compte et par séance | `POST /api/reservations`, `GET /api/reservations/{id}`, `DELETE /api/reservations/{id}` | ✅ |
 | US 3.1 | Payer depuis la page du blocage : case « J'accepte les conditions générales de vente » obligatoire (lien vers `/terms-of-sale`, ouvert dans un nouvel onglet), « Payer » ouvre la page de paiement Stripe, où la carte est saisie ; au retour, « Paiement en cours de confirmation » le temps que Stripe notifie l'API, puis « Paiement confirmé » avec places et montant ; messages pour un blocage expiré et une réservation déjà payée | `POST /api/reservations/{id}/payment`, `GET /api/reservations/{id}` | ✅ |
+| US 3.2 | Le billet, sur la page d'une réservation payée : film, date et heure, salle, places, et le QR code du code du billet, à présenter en salle ; pour une séance annulée, « Séance annulée » et pas de QR code | `GET /api/reservations/{id}/ticket` | ✅ |
+| US 3.2 | « Mes billets », dans « Mon compte » : les réservations payées, la séance la plus tardive d'abord, chacune avec « Voir le billet » | `GET /api/users/me/tickets` | ✅ |
 | US 3.1 | Conditions générales de vente (`/terms-of-sale`), liées depuis la page du blocage et le pied de page | — | ✅ |
 | US 5.1 | Suivi au guichet : le caissier ouvre le suivi des réservations (`/tracking`, lien « Réservations » dans l'en-tête et le menu du téléphone), en lecture seule : par séance, places vendues en ligne et restantes ; ni lien « Programmation » ni accès à `/programming` (retour à l'accueil) | `GET /api/reservation-tracking?date=` | ✅ |
 | US 5.2 | Programmation (`/programming`, réservée au responsable, lien « Programmation » dans l'en-tête) : séances d'un jour avec places prises sur la capacité, « Commencée » ou « Terminée » ; ajout d'une séance (film, salle, heure, prix) dans un formulaire qui reste visible à droite ; modification de l'heure et du prix, annulation ; avertissement avec « Confirmer » quand des places sont bloquées ou vendues ; messages sous la séance ou sous le formulaire concerné | `GET /api/programming`, `POST /api/programming/screenings`, `PUT` et `DELETE /api/programming/screenings/{id}` | ✅ |

@@ -37,11 +37,11 @@ export class ReservationsService {
 
   /** The ticket of a paid reservation (US 3.2); 404 "ticket-not-found" when it is not paid. */
   getTicket(reservationId: string): Observable<Ticket> {
-    throw new Error(`Step 21b: ${reservationId}`);
+    return this.http.get<Ticket>(`/api/reservations/${reservationId}/ticket`);
   }
 
   /** The paid reservations of the signed-in customer, the latest screening first (US 3.2). */
   getMyTickets(): Observable<TicketSummary[]> {
-    throw new Error('Step 21b');
+    return this.http.get<TicketSummary[]>('/api/users/me/tickets');
   }
 }

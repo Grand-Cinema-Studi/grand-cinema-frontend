@@ -113,4 +113,13 @@ describe('Layout', () => {
       'Réservations',
     );
   });
+
+  it('when the cashier is signed in, then the header leads to the reservation tracking only', async () => {
+    const element = await render({ ...lea, firstName: 'Hugo', role: 'Cashier' });
+
+    expect(element.querySelector('header a[href="/tracking"]')?.textContent?.trim()).toBe(
+      'Réservations',
+    );
+    expect(element.querySelector('header a[href="/programming"]')).toBeNull();
+  });
 });

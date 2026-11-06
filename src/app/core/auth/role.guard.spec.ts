@@ -12,7 +12,7 @@ import { User } from './models/auth';
 import { roleGuard } from './role.guard';
 
 describe('US 5.2 – roleGuard', () => {
-  function check(role: User['role'] | null) {
+  function check(role: User['role'] | null, allowed: User['role'][] = ['Manager']) {
     const user = role ? ({ role } as User) : null;
     TestBed.configureTestingModule({
       providers: [
@@ -24,7 +24,7 @@ describe('US 5.2 – roleGuard', () => {
       ],
     });
     return TestBed.runInInjectionContext(() =>
-      roleGuard('Manager')(
+      roleGuard(...allowed)(
         {} as ActivatedRouteSnapshot,
         { url: '/programming' } as RouterStateSnapshot,
       ),
@@ -46,5 +46,9 @@ describe('US 5.2 – roleGuard', () => {
 
     expect(TestBed.inject(Router).serializeUrl(result)).toMatch(/^\/sign-in\?/);
     expect(result.queryParams['returnUrl']).toBe('/programming');
+  });
+
+  it('when a page is open to several roles, then each of them opens it', () => {
+    expect(check('Cashier', ['Manager', 'Cashier'])).toBe(true);
   });
 });

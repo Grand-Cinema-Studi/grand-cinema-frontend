@@ -3,6 +3,7 @@ import { Router, provideRouter } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { User } from '../../../core/auth/models/auth';
+import { ReservationsService } from '../../reservations/reservations.service';
 import { AccountPage } from './account-page';
 
 describe('US 2.1 – AccountPage', () => {
@@ -20,9 +21,27 @@ describe('US 2.1 – AccountPage', () => {
       deleteAccount: vi.fn(deleteAccount),
       signOut: vi.fn(),
     };
+    const reservations = {
+      getMyTickets: vi.fn(() =>
+        of([
+          {
+            reservationId: 'id-bird',
+            movieTitle: 'Bird',
+            startsAt: '2026-11-12T20:30:00',
+            roomName: 'Salle 1',
+            seatCount: 2,
+            screeningCancelled: false,
+          },
+        ]),
+      ),
+    };
     TestBed.configureTestingModule({
       imports: [AccountPage],
-      providers: [provideRouter([]), { provide: AuthService, useValue: auth }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: auth },
+        { provide: ReservationsService, useValue: reservations },
+      ],
     });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const fixture = TestBed.createComponent(AccountPage);
@@ -87,5 +106,15 @@ describe('US 2.1 – AccountPage', () => {
 
     expect(page.auth.signOut).toHaveBeenCalled();
     expect(page.navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('when the account page opens, then my tickets are listed with a link to each one', async () => {
+    const page = await render();
+
+    const tickets = page.element.querySelector('[data-tickets]');
+    expect(tickets?.textContent).toContain('Bird');
+    expect(tickets?.textContent).toContain('12/11/2026');
+    expect(tickets?.textContent).toContain('2 places');
+    expect(tickets?.querySelector('a')?.getAttribute('href')).toBe('/reservations/id-bird');
   });
 });

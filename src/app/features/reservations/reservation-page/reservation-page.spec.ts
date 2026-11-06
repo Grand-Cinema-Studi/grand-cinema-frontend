@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { ExternalNavigation } from '../../../core/navigation/external-navigation';
-import { Reservation } from '../models/reservation';
+import { Reservation, Ticket } from '../models/reservation';
 import { ReservationsService } from '../reservations.service';
 import { ReservationPage } from './reservation-page';
 
@@ -17,6 +17,16 @@ describe('US 2.3 – ReservationPage', () => {
     expiresAt: '2026-10-30T17:07:59Z',
   };
 
+  const ticket: Ticket = {
+    reservationId: 'id-hold',
+    ticketCode: '0123456789abcdef0123456789abcdef',
+    movieTitle: 'Bird',
+    startsAt: '2026-11-12T20:30:00',
+    roomName: 'Salle 1',
+    seats: ['A1', 'A2'],
+    screeningCancelled: false,
+  };
+
   beforeEach(() => {
     // Only the clock of the countdown is simulated: Angular keeps its own timers
     vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
@@ -27,9 +37,10 @@ describe('US 2.3 – ReservationPage', () => {
     vi.useRealTimers();
   });
 
-  async function render(reservation: Reservation, payment?: string) {
+  async function render(reservation: Reservation, payment?: string, paidTicket: Ticket = ticket) {
     const reservations = {
       getReservation: vi.fn(() => of(reservation)),
+      getTicket: vi.fn(() => of(paidTicket)),
       cancelHold: vi.fn(() => of(undefined)),
       startPayment: vi.fn(() => of({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test' })),
     };
@@ -154,5 +165,30 @@ describe('US 2.3 – ReservationPage', () => {
     vi.advanceTimersByTime(2000);
     await fixture.whenStable();
     expect(element.querySelector('h1')?.textContent).toContain('Paiement confirmé');
+  });
+
+  it('when the reservation is paid, then its ticket shows the movie, the screening, the room, the seats and the qr code', async () => {
+    const { element, reservations } = await render({ ...hold, status: 'Confirmed' });
+
+    expect(reservations.getTicket).toHaveBeenCalledWith('id-hold');
+    const card = element.querySelector('[data-ticket]');
+    expect(card?.textContent).toContain('Bird');
+    expect(card?.textContent).toContain('12/11/2026');
+    expect(card?.textContent).toContain('20:30');
+    expect(card?.textContent).toContain('Salle 1');
+    expect(card?.textContent).toContain('2 places');
+    expect(card?.textContent).toContain('A1, A2');
+    expect(card?.querySelector('app-ticket-qr-code svg')).not.toBeNull();
+  });
+
+  it('when the screening of a paid reservation was cancelled, then the ticket says so and no qr code is drawn', async () => {
+    const { element } = await render({ ...hold, status: 'Confirmed' }, undefined, {
+      ...ticket,
+      screeningCancelled: true,
+    });
+
+    const card = element.querySelector('[data-ticket]');
+    expect(card?.textContent).toContain('Séance annulée');
+    expect(card?.querySelector('app-ticket-qr-code')).toBeNull();
   });
 });

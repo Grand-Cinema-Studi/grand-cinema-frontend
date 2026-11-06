@@ -65,6 +65,12 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'legal-notice',
+    title: 'Le Grand Cinéma – Mentions légales',
+    loadComponent: () =>
+      import('./features/legal/legal-notice-page/legal-notice-page').then((m) => m.LegalNoticePage),
+  },
+  {
     path: 'programming',
     title: 'Le Grand Cinéma – Programmation',
     canActivate: [roleGuard('Manager')],

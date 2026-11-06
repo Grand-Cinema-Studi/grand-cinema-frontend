@@ -52,6 +52,7 @@ Une adresse de l'application comme `/schedule` ou `/account` n'est pas un fichie
 - **Session** : l'inscription (`POST /api/users`) et la connexion (`POST /api/tokens`) renvoient un jeton JWT et l'utilisateur. `AuthService` les garde en `sessionStorage` : la session survit au rechargement de l'onglet et disparaît à sa fermeture ; un jeton expiré est ignoré au démarrage.
 - **Intercepteur** (`authInterceptor`) : ajoute `Authorization: Bearer <jeton>` aux seuls appels `/api/...` ; une réponse `401` efface la session.
 - **Garde** (`authGuard`) : `/account` sans être connecté ouvre la page de connexion (`/sign-in?returnUrl=%2Faccount`), qui ramène ensuite à la page demandée. L'adresse de retour n'est suivie que si c'est une page du site (pas de redirection ouverte).
+- **Garde de rôle** (`roleGuard(...rôles)`) : un écran du personnel ne s'ouvre qu'aux rôles listés (`/programming` : le responsable ; `/tracking` : le responsable et le caissier) ; un autre rôle revient à l'accueil, un visiteur non connecté passe par la connexion. C'est un confort : l'API répond `403` aux autres rôles de toute façon.
 - **Messages d'erreur** : `problemMessage()` choisit un message en français d'après le `type` des réponses Problem Details de l'API (`/errors/email-already-used`, `/errors/invalid-credentials`…) ; `429` donne « Trop de tentatives », toute autre erreur « Le service est momentanément indisponible ». Le `title` de l'API, en anglais, n'est jamais affiché.
 - **RGPD** : l'inscription exige l'acceptation de la politique de confidentialité (case obligatoire, lien vers `/privacy-policy`) ; l'API la vérifie aussi et enregistre la version acceptée. « Mon compte » permet de supprimer son compte (`DELETE /api/users/me`), après une confirmation explicite.
 
@@ -111,11 +112,11 @@ src/
 └── app/
     ├── app.ts              composant racine, affiche la mise en page
     ├── app.config.ts       providers globaux : routeur (paramètres d'adresse passés aux pages en entrées), HttpClient avec l'intercepteur, affichage en français
-    ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account et /reservations/:id protégées par authGuard, /programming et /tracking par roleGuard('Manager')
+    ├── app.routes.ts       routes, chargées à la demande (loadComponent) ; /account et /reservations/:id protégées par authGuard, /programming par roleGuard('Manager'), /tracking par roleGuard('Manager', 'Cashier')
     ├── core/               éléments techniques communs
     │   ├── auth/           session (AuthService), intercepteur, gardes (connexion ; rôle, pour les écrans du personnel), types des échanges avec l'API
     │   ├── errors/         messages en français d'après les réponses Problem Details de l'API
-    │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté ; « Programmation » pour le responsable ; menu sur téléphone), zone des pages, pied de page
+    │   ├── layout/         en-tête (Connexion, ou prénom une fois connecté ; « Programmation » pour le responsable, « Réservations » pour le responsable et le caissier ; menu sur téléphone), zone des pages, pied de page
     │   ├── navigation/     sortie vers un autre site (page de paiement Stripe), remplacée par une doublure dans les tests
     │   └── not-found/      page « introuvable » (toute adresse inconnue)
     ├── shared/             réutilisé par plusieurs écrans
@@ -128,7 +129,7 @@ src/
         ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
         ├── reservations/   US 2.3 et 3.1 : formulaire de réservation (fiche d'un film), page du blocage (/reservations/:id) : compte à rebours, « Annuler », conditions générales de vente et « Payer », paiement confirmé
         ├── programming/    US 5.2 : programmation pour le responsable (/programming) : ajouter, déplacer, annuler des séances
-        ├── tracking/       US 5.3 : suivi des réservations (/tracking) : par séance, places vendues, bloquées, restantes et taux de remplissage
+        ├── tracking/       US 5.3 et 5.1 : suivi des réservations (/tracking), pour le responsable et le caissier : par séance, places vendues, bloquées, restantes et taux de remplissage
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
         ├── account/        US 2.1 : mon compte (/account) : profil, déconnexion, suppression du compte
         └── legal/          US 2.1 et 3.1 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale)
@@ -174,8 +175,9 @@ public/
 | US 2.3 | Réserver depuis une séance : formulaire sur la fiche du film (1 à 10 places, toujours visible en faisant défiler), connexion ou création de compte puis retour au formulaire ; page du blocage (`/reservations/:id`) avec places, montant et compte à rebours de 10 minutes, bouton « Annuler » qui libère aussitôt les places et ramène à la fiche du film, puis message quand les places sont libérées ; messages pour « plus assez de places », « séance commencée » et la limite de 10 places par compte et par séance | `POST /api/reservations`, `GET /api/reservations/{id}`, `DELETE /api/reservations/{id}` | ✅ |
 | US 3.1 | Payer depuis la page du blocage : case « J'accepte les conditions générales de vente » obligatoire (lien vers `/terms-of-sale`, ouvert dans un nouvel onglet), « Payer » ouvre la page de paiement Stripe, où la carte est saisie ; au retour, « Paiement en cours de confirmation » le temps que Stripe notifie l'API, puis « Paiement confirmé » avec places et montant ; messages pour un blocage expiré et une réservation déjà payée | `POST /api/reservations/{id}/payment`, `GET /api/reservations/{id}` | ✅ |
 | US 3.1 | Conditions générales de vente (`/terms-of-sale`), liées depuis la page du blocage et le pied de page | — | ✅ |
+| US 5.1 | Suivi au guichet : le caissier ouvre le suivi des réservations (`/tracking`, lien « Réservations » dans l'en-tête et le menu du téléphone), en lecture seule : par séance, places vendues en ligne et restantes ; ni lien « Programmation » ni accès à `/programming` (retour à l'accueil) | `GET /api/reservation-tracking?date=` | ✅ |
 | US 5.2 | Programmation (`/programming`, réservée au responsable, lien « Programmation » dans l'en-tête) : séances d'un jour avec places prises sur la capacité, « Commencée » ou « Terminée » ; ajout d'une séance (film, salle, heure, prix) dans un formulaire qui reste visible à droite ; modification de l'heure et du prix, annulation ; avertissement avec « Confirmer » quand des places sont bloquées ou vendues ; messages sous la séance ou sous le formulaire concerné | `GET /api/programming`, `POST /api/programming/screenings`, `PUT` et `DELETE /api/programming/screenings/{id}` | ✅ |
-| US 5.3 | Suivi des réservations (`/tracking`, réservé au responsable, lien « Réservations » dans l'en-tête et le menu du téléphone) : pour chaque séance d'un jour, places vendues (en ligne, au guichet), bloquées, restantes, capacité et taux de remplissage avec une barre ; total de la journée en tête | `GET /api/reservation-tracking?date=` | ✅ |
+| US 5.3 | Suivi des réservations (`/tracking`, réservé au responsable et au caissier, lien « Réservations » dans l'en-tête et le menu du téléphone) : pour chaque séance d'un jour, places vendues (en ligne, au guichet), bloquées, restantes, capacité et taux de remplissage avec une barre ; total de la journée en tête | `GET /api/reservation-tracking?date=` | ✅ |
 
 Les écrans sont développés en TDD, user story par user story. Les user stories et leur avancement sont suivis sur le [Project GitHub](https://github.com/orgs/Grand-Cinema-Studi/projects/3).
 

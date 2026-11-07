@@ -38,6 +38,20 @@ Le front ne contient aucune règle métier ni accès direct à la base de donné
 | Intégration et déploiement continus | GitHub Actions, Dependabot ; accès à AWS par OIDC, sans clé stockée |
 | Hébergement | fichiers statiques dans un bucket S3 privé, diffusés par CloudFront (accès au bucket réservé à CloudFront), voir l'[ADR 0003](https://github.com/Grand-Cinema-Studi/grand-cinema-docs/blob/main/adr/0003-hosting-cloudfront-s3-ec2.md) |
 
+## Maquettes
+
+Les écrans publics ont été maquettés dans Figma **avant** le développement, à partir des fonctionnalités du MVP (Bloc 1) : [maquettes Figma](https://www.figma.com/design/STWs0Pj1CyWqE5uiwkUaf6/Grand-Cinema-Studi?node-id=0-1&t=JxUrvrVWBIhG6gBz-1) (lecture seule, sans compte).
+
+| Maquetté (ordinateur et téléphone) | Repris dans le front |
+|---|---|
+| En-tête et pied de page, communs à toutes les pages | `core/layout/` |
+| Page d'accueil | `features/schedule/` (programmation, films à la une, recherche d'une séance), `features/cinema/` |
+| Politique de confidentialité | `features/legal/privacy-policy-page/` |
+| Page Contact | non développée : hors du MVP |
+
+- **Charte** : les couleurs et les polices de la maquette sont les variables du thème Tailwind, dans `src/styles.css` (`--color-night`, `--color-brand`, `--color-cream`… ; Bebas Neue pour les titres, Inter pour le texte). Chaque variable devient une classe (`bg-night`, `text-cream`, `font-display`) : tous les écrans partagent la même charte.
+- **Écrans sans maquette**, conçus pendant le développement avec ce thème et les mêmes composants : tous les films, fiche d'un film, réservation, paiement, billet, connexion, inscription, mon compte, conditions générales de vente, mentions légales, bandeau des cookies, et les écrans du personnel (programmation, suivi des réservations, contrôle des billets).
+
 ## Appels à l'API : chemins relatifs, pas de CORS
 
 Le front appelle toujours l'API par des chemins **relatifs** (`/api/schedule`), jamais par une adresse en dur, et aucun fichier d'environnement ne contient d'adresse d'API.

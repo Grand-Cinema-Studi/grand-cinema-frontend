@@ -1,0 +1,78 @@
+<section class="mx-auto flex w-full max-w-xl flex-col gap-6 px-5 py-10">
+  <h1 class="font-display text-4xl leading-none uppercase md:text-5xl">Contrôle des billets</h1>
+
+  @let list = screenings();
+  @if (list === undefined) {
+    <p class="text-sm text-muted">Chargement des séances…</p>
+  } @else if (list === null) {
+    <p role="alert" class="text-sm text-muted">
+      Les séances du jour sont momentanément indisponibles. Rechargez la page.
+    </p>
+  } @else if (list.length === 0) {
+    <p class="text-sm text-muted">Aucune séance aujourd'hui.</p>
+  } @else {
+    <label class="flex flex-col gap-2 text-sm">
+      <span class="font-semibold uppercase">Séance contrôlée</span>
+      <select
+        class="h-11 rounded-[3px] border border-line bg-night px-3"
+        [value]="screeningId()"
+        (change)="screeningId.set($any($event.target).value); verdict.set(null)"
+      >
+        @for (screening of list; track screening.screeningId) {
+          <option [value]="screening.screeningId">{{ label(screening) }}</option>
+        }
+      </select>
+    </label>
+
+    <!-- The verdict, at once, in a wide band (criterion 4): the colour is not the only information -->
+    <div aria-live="assertive">
+      @if (verdict(); as result) {
+        <div
+          data-verdict
+          role="status"
+          class="flex flex-col gap-1 rounded-[3px] p-5 text-white"
+          [class.bg-green-700]="result.granted"
+          [class.bg-red-700]="!result.granted"
+        >
+          @if (result.granted) {
+            <p class="text-2xl font-semibold uppercase">✓ Accès autorisé</p>
+            <p class="text-sm">
+              {{ result.ticket.movieTitle }} · {{ result.ticket.startsAt | date: 'HH:mm' }} ·
+              {{ result.ticket.roomName }}
+            </p>
+            <p class="text-lg font-semibold">
+              {{ result.ticket.seats.length }} places : {{ result.ticket.seats.join(', ') }}
+            </p>
+          } @else {
+            <p class="text-2xl font-semibold uppercase">✕ Accès refusé</p>
+            <p class="text-lg">{{ result.reason }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <app-ticket-scanner (scanned)="check($event)" />
+
+    <form class="flex flex-col gap-2" (submit)="$event.preventDefault(); submit()">
+      <label for="ticket-code" class="text-sm font-semibold">
+        Code du billet, si le QR code ne se lit pas
+      </label>
+      <div class="flex gap-3">
+        <input
+          id="ticket-code"
+          [formControl]="code"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          class="h-11 min-w-0 flex-1 rounded-[3px] border border-line bg-night px-3 font-mono text-sm"
+        />
+        <button
+          type="submit"
+          class="h-11 rounded-[3px] bg-brand px-4 text-[13px] font-semibold hover:brightness-110"
+        >
+          Vérifier
+        </button>
+      </div>
+    </form>
+  }
+</section>

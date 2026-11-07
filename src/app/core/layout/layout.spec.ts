@@ -136,6 +136,21 @@ describe('Layout', () => {
     expect(element.querySelector('header a[href="/programming"]')).toBeNull();
   });
 
+  it('when the staff is signed in, then the header offers no ticket to buy', async () => {
+    const buyLinks = (element: HTMLElement) =>
+      Array.from(element.querySelectorAll('header a')).filter((link) =>
+        link.textContent?.includes('Acheter un billet'),
+      );
+
+    expect(buyLinks(await render(lea))).toHaveLength(1);
+    TestBed.resetTestingModule();
+    expect(buyLinks(await render({ ...lea, role: 'Cashier' }))).toHaveLength(0);
+    TestBed.resetTestingModule();
+    expect(buyLinks(await render({ ...lea, role: 'TicketInspector' }))).toHaveLength(0);
+    TestBed.resetTestingModule();
+    expect(buyLinks(await render({ ...lea, role: 'Manager' }))).toHaveLength(0);
+  });
+
   it('when « Cookies » is pressed in the footer, then the banner shows again', async () => {
     localStorage.setItem(
       'grand-cinema.cookie-consent',

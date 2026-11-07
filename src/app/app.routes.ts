@@ -1,23 +1,27 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/auth.guard';
 import { roleGuard } from './core/auth/role.guard';
+import { staffHomeGuard } from './core/auth/staff-home.guard';
 
 export const routes: Routes = [
   {
     path: '',
     title: "Le Grand Cinéma – À l'affiche",
+    canActivate: [staffHomeGuard],
     loadComponent: () =>
       import('./features/schedule/schedule-page/schedule-page').then((m) => m.SchedulePage),
   },
   {
     path: 'movies',
     title: 'Le Grand Cinéma – Tous les films',
+    canActivate: [staffHomeGuard],
     loadComponent: () =>
       import('./features/movies/movies-page/movies-page').then((m) => m.MoviesPage),
   },
   {
     path: 'movies/:movieId',
     title: 'Le Grand Cinéma – Fiche du film',
+    canActivate: [staffHomeGuard],
     loadComponent: () => import('./features/movies/movie-page/movie-page').then((m) => m.MoviePage),
   },
   {

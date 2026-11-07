@@ -4,6 +4,8 @@ import { Component, computed, inject, input, linkedSignal } from '@angular/core'
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
+import { canBuyTickets } from '../../../core/auth/roles';
 import { RuntimePipe } from '../../../shared/runtime.pipe';
 import { HoldForm } from '../../reservations/hold-form/hold-form';
 import { ScreeningSlot } from '../../schedule/screening-slot/screening-slot';
@@ -36,6 +38,9 @@ function isMovieNotFound(error: unknown): boolean {
 })
 export class MoviePage {
   private readonly moviesService = inject(MoviesService);
+  private readonly auth = inject(AuthService);
+  /** The booking form only for a visitor or a customer; the manager sees the screenings, not the form. */
+  protected readonly canBuy = computed(() => canBuyTickets(this.auth.user()));
 
   /** Identifier of the movie, read from the address /movies/:movieId (withComponentInputBinding). */
   readonly movieId = input.required<string>();

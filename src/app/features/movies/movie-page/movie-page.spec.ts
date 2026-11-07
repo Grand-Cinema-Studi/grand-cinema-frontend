@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
+import { User } from '../../../core/auth/models/auth';
 import { ReservationsService } from '../../reservations/reservations.service';
 import { MovieDetails, ScreeningDay } from '../models/movie-details';
 import { MoviesService } from '../movies.service';
@@ -41,6 +42,7 @@ describe('US 1.1 – MoviePage', () => {
   async function render(
     getMovieDetails: (movieId: string) => Observable<MovieDetails>,
     movieId = BIRD_ID,
+    user: User | null = null,
   ) {
     const service = { getMovieDetails: vi.fn(getMovieDetails) };
     TestBed.configureTestingModule({
@@ -48,7 +50,10 @@ describe('US 1.1 – MoviePage', () => {
       providers: [
         provideRouter([]),
         { provide: MoviesService, useValue: service },
-        { provide: AuthService, useValue: { isSignedIn: signal(false) } },
+        {
+          provide: AuthService,
+          useValue: { isSignedIn: signal(user !== null), user: signal(user) },
+        },
         { provide: ReservationsService, useValue: {} },
       ],
     });
@@ -148,5 +153,20 @@ describe('US 1.1 – MoviePage', () => {
     await fixture.whenStable();
 
     expect(element.querySelector('app-hold-form')?.textContent).toContain('Salle 1');
+  });
+
+  it('when the manager chooses a screening, then no booking form is offered', async () => {
+    const manager = { firstName: 'Claire', role: 'Manager' } as User;
+    const { element, fixture } = await render(
+      () => of(bird([day('2026-10-31', [42])])),
+      BIRD_ID,
+      manager,
+    );
+
+    fixture.componentRef.setInput('screening', '2026-10-31-0');
+    await fixture.whenStable();
+
+    expect(element.querySelector('app-hold-form')).toBeNull();
+    expect(element.textContent).toContain('La réservation en ligne est réservée aux spectateurs.');
   });
 });

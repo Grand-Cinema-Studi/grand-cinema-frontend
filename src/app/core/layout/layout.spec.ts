@@ -126,6 +126,16 @@ describe('Layout', () => {
     expect(element.querySelector('header a[href="/programming"]')).toBeNull();
   });
 
+  it('when the inspector is signed in, then the header leads to the ticket check only', async () => {
+    const element = await render({ ...lea, firstName: 'Inès', role: 'TicketInspector' });
+
+    expect(element.querySelector('header a[href="/ticket-check"]')?.textContent?.trim()).toBe(
+      'Contrôle',
+    );
+    expect(element.querySelector('header a[href="/tracking"]')).toBeNull();
+    expect(element.querySelector('header a[href="/programming"]')).toBeNull();
+  });
+
   it('when « Cookies » is pressed in the footer, then the banner shows again', async () => {
     localStorage.setItem(
       'grand-cinema.cookie-consent',

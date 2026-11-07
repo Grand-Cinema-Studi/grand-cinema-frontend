@@ -8,14 +8,14 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import jsQR from 'jsqr';
+import { QrFrameReader } from './qr-frame-reader';
 
 /** The same QR code in front of the camera is read once, then ignored for this long. */
 const SAME_CODE_PAUSE_MS = 3000;
 
 /**
- * US 4.1: reads QR codes with the back camera of the phone. Every image goes through jsqr, in the
- * browser: nothing leaves the phone but the text read, sent by the page to the API.
+ * US 4.1: reads QR codes with the back camera of the phone. Every image is read in the browser
+ * (QrFrameReader): nothing leaves the phone but the text read, sent by the page to the API.
  */
 @Component({
   selector: 'app-ticket-scanner',
@@ -27,7 +27,7 @@ export class TicketScanner {
 
   protected readonly cameraState = signal<'starting' | 'reading' | 'unavailable'>('starting');
   private readonly video = viewChild.required<ElementRef<HTMLVideoElement>>('video');
-  private readonly canvas = document.createElement('canvas');
+  private readonly reader = inject(QrFrameReader);
   private stream: MediaStream | null = null;
   private frame = 0;
   private lastCode = '';
@@ -56,17 +56,9 @@ export class TicketScanner {
   }
 
   private read(): void {
-    const video = this.video().nativeElement;
-    const context = this.canvas.getContext('2d', { willReadFrequently: true });
-    if (context && video.videoWidth > 0) {
-      this.canvas.width = video.videoWidth;
-      this.canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-      const image = context.getImageData(0, 0, video.videoWidth, video.videoHeight);
-      const code = jsQR(image.data, image.width, image.height);
-      if (code?.data) {
-        this.emitOnce(code.data);
-      }
+    const text = this.reader.read(this.video().nativeElement);
+    if (text) {
+      this.emitOnce(text);
     }
     this.frame = requestAnimationFrame(() => this.read());
   }

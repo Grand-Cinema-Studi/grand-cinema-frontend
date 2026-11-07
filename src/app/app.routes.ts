@@ -87,6 +87,15 @@ export const routes: Routes = [
       import('./features/tracking/tracking-page/tracking-page').then((m) => m.TrackingPage),
   },
   {
+    path: 'ticket-check',
+    title: 'Le Grand Cinéma – Contrôle des billets',
+    canActivate: [roleGuard('TicketInspector')],
+    loadComponent: () =>
+      import('./features/ticket-check/ticket-check-page/ticket-check-page').then(
+        (m) => m.TicketCheckPage,
+      ),
+  },
+  {
     path: '**',
     title: 'Le Grand Cinéma – Page introuvable',
     loadComponent: () => import('./core/not-found/not-found').then((m) => m.NotFound),

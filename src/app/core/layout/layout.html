@@ -29,6 +29,14 @@
               Réservations
             </a>
           }
+          @if (user.role === 'TicketInspector') {
+            <a
+              routerLink="/ticket-check"
+              class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+            >
+              Contrôle
+            </a>
+          }
           <a
             routerLink="/account"
             [title]="user.firstName"
@@ -114,6 +122,15 @@
               class="py-3 text-sm font-semibold uppercase hover:text-muted"
             >
               Réservations
+            </a>
+          }
+          @if (user.role === 'TicketInspector') {
+            <a
+              routerLink="/ticket-check"
+              (click)="menuOpen.set(false)"
+              class="py-3 text-sm font-semibold uppercase hover:text-muted"
+            >
+              Contrôle
             </a>
           }
           <a

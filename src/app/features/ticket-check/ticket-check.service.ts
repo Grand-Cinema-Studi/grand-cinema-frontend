@@ -10,11 +10,11 @@ export class TicketCheckService {
 
   /** The screenings of today, started ones included. */
   getScreenings(): Observable<TicketCheckScreening[]> {
-    throw new Error('Step 22b');
+    return this.http.get<TicketCheckScreening[]>('/api/ticket-checks/screenings');
   }
 
   /** 200: let in, the ticket is now used; 409 ticket-already-used, 409 ticket-for-another-screening, 404 ticket-not-found. */
   checkTicket(screeningId: string, ticketCode: string): Observable<TicketCheck> {
-    throw new Error(`Step 22b: ${screeningId} ${ticketCode}`);
+    return this.http.post<TicketCheck>('/api/ticket-checks', { screeningId, ticketCode });
   }
 }

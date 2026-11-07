@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { canBuyTickets } from '../auth/roles';
 import { CookieBanner } from '../consent/cookie-banner/cookie-banner';
 import { CookieConsentService } from '../consent/cookie-consent.service';
 
@@ -17,6 +18,8 @@ interface FooterGroup {
 })
 export class Layout {
   protected readonly auth = inject(AuthService);
+  /** « Acheter un billet » only for a visitor or a customer: the staff does not buy. */
+  protected readonly canBuy = computed(() => canBuyTickets(this.auth.user()));
   /** Phones only: the menu of the header, opened by its button. */
   protected readonly menuOpen = signal(false);
   /** The footer button « Cookies » forgets the choice: the banner shows again. */

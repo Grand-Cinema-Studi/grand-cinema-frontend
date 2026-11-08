@@ -31,11 +31,13 @@ function day(date: string, takenSeats = 0): Programming {
       { roomId: 'id-salle-1', name: 'Salle 1', capacity: 170 },
       { roomId: 'id-salle-2', name: 'Salle 2', capacity: 300 },
     ],
+    genres: ['Biopic', 'Drame', 'Science-fiction'],
   };
 }
 
 const conflict = (type: string) =>
   throwError(() => new HttpErrorResponse({ status: 409, error: { type } }));
+const minuit = new File([new Uint8Array(10)], 'minuit.png', { type: 'image/png' });
 
 describe('US 5.2 – ProgrammingPage', () => {
   afterEach(() => vi.useRealTimers());
@@ -46,6 +48,7 @@ describe('US 5.2 – ProgrammingPage', () => {
       createScreening?: () => Observable<{ screeningId: string }>;
       updateScreening?: () => Observable<void>;
       cancelScreening?: (id: string, confirmed: boolean) => Observable<void>;
+      createMovie?: () => Observable<{ movieId: string }>;
     } = {},
   ) {
     const service = {
@@ -53,6 +56,7 @@ describe('US 5.2 – ProgrammingPage', () => {
       createScreening: vi.fn(options.createScreening ?? (() => of({ screeningId: 'id-new' }))),
       updateScreening: vi.fn(options.updateScreening ?? (() => of(undefined))),
       cancelScreening: vi.fn(options.cancelScreening ?? (() => of(undefined))),
+      createMovie: vi.fn(options.createMovie ?? (() => of({ movieId: 'id-movie-new' }))),
     };
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: ProgrammingService, useValue: service }],
@@ -74,8 +78,14 @@ describe('US 5.2 – ProgrammingPage', () => {
       button?.click();
       await fixture.whenStable();
     };
+    const choose = async (form: HTMLElement, file: File) => {
+      const field = form.querySelector<HTMLInputElement>('[name="poster"]')!;
+      Object.defineProperty(field, 'files', { value: [file] });
+      field.dispatchEvent(new Event('change'));
+      await fixture.whenStable();
+    };
 
-    return { element, service, fill, click, fixture };
+    return { element, service, fill, click, choose, fixture };
   }
 
   it('when the page opens, then the screenings of the day are shown with their taken seats', async () => {
@@ -193,5 +203,92 @@ describe('US 5.2 – ProgrammingPage', () => {
     const row = element.querySelector('[data-screening="id-bird"]');
     expect(row?.textContent).toContain('Commencée');
     expect(row?.querySelector('button')).toBeNull();
+  });
+
+  describe('US 5.6 – a new movie', () => {
+    async function openMovieForm(options: Parameters<typeof render>[0] = {}) {
+      const page = await render(options);
+      await page.click('Ajouter un film au catalogue');
+      const form = page.element.querySelector<HTMLFormElement>('form[name="new-movie"]')!;
+      const fillMovie = async () => {
+        await page.fill(form, 'title', '  Autour de minuit ');
+        await page.fill(form, 'synopsis', 'Paris, 1959.');
+        await page.fill(form, 'durationMinutes', '133');
+        await page.fill(form, 'releaseDate', '1986-10-03');
+        await page.fill(form, 'genre', 'Drame');
+        await page.choose(form, minuit);
+      };
+      return { ...page, form, fillMovie };
+    }
+
+    it('when a movie is added, then the api receives its card and its poster, and the new movie is chosen for the next screening', async () => {
+      const { element, service, form, fillMovie, fixture } = await openMovieForm();
+      await fillMovie();
+      // The day read again holds the new movie
+      const withNewMovie = day('2032-03-15');
+      withNewMovie.movies.push({
+        movieId: 'id-movie-new',
+        title: 'Autour de minuit',
+        durationMinutes: 133,
+      });
+      service.getProgramming.mockReturnValue(of(withNewMovie));
+
+      form.dispatchEvent(new Event('submit'));
+      await fixture.whenStable();
+
+      expect(service.createMovie).toHaveBeenCalledWith({
+        title: 'Autour de minuit',
+        synopsis: 'Paris, 1959.',
+        durationMinutes: 133,
+        genre: 'Drame',
+        releaseDate: '1986-10-03',
+        poster: minuit,
+      });
+      expect(service.getProgramming).toHaveBeenLastCalledWith('2032-03-15');
+      // Criterion 1: offered, and already chosen, in the form of a new screening
+      expect(
+        element.querySelector<HTMLSelectElement>('form[name="new-screening"] [name="movieId"]')
+          ?.value,
+      ).toBe('id-movie-new');
+      expect(element.querySelector('[role="status"]')?.textContent).toContain('Autour de minuit');
+      expect(element.querySelector('form[name="new-movie"]')).toBeNull();
+    });
+
+    it('when the genre is chosen, then only the genres sent by the api are offered', async () => {
+      const { form } = await openMovieForm();
+
+      const genres = Array.from(form.querySelectorAll('[name="genre"] option')).map((option) =>
+        option.textContent?.trim(),
+      );
+
+      expect(genres).toEqual(['Choisir un genre', 'Biopic', 'Drame', 'Science-fiction']);
+    });
+
+    it('when the poster weighs more than 2 MB, then it is refused before anything is sent', async () => {
+      const { service, form, fill, choose } = await openMovieForm();
+      await fill(form, 'title', 'Autour de minuit');
+
+      await choose(
+        form,
+        new File([new Uint8Array(2 * 1024 * 1024 + 1)], 'lourde.jpg', { type: 'image/jpeg' }),
+      );
+
+      expect(form.querySelector('[role="alert"]')?.textContent).toContain('2 Mo');
+      expect(form.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
+      expect(service.createMovie).not.toHaveBeenCalled();
+    });
+
+    it('when the movie is already in the catalog, then the french message is shown in its form', async () => {
+      const { element, form, fillMovie, fixture } = await openMovieForm({
+        createMovie: () => conflict('/errors/movie-already-exists'),
+      });
+      await fillMovie();
+
+      form.dispatchEvent(new Event('submit'));
+      await fixture.whenStable();
+
+      expect(form.querySelector('[role="alert"]')?.textContent).toContain('déjà au catalogue');
+      expect(element.querySelector('[role="status"]')).toBeNull();
+    });
   });
 });

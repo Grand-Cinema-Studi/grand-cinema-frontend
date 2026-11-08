@@ -23,6 +23,10 @@ const messages = new Map<string, string>([
   ],
   ['/errors/room-not-found', "Cette salle n'existe plus."],
   ['/errors/movie-not-found', "Ce film n'existe plus."],
+  [
+    '/errors/movie-already-exists',
+    'Ce film est déjà au catalogue (même titre et même date de sortie).',
+  ],
 ]);
 
 const unavailable = 'Le service est momentanément indisponible. Réessayez dans quelques instants.';

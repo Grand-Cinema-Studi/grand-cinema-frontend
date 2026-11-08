@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { problemMessage } from '../../../core/errors/problem-message';
 import { ProgrammedScreening, Programming, ProgrammingMovie } from '../models/programming';
@@ -21,6 +21,9 @@ interface RowError {
   screeningId: string;
   message: string;
 }
+
+/** As the API (PosterRules.MaxBytes): above, the poster is refused before being sent. */
+const MAX_POSTER_BYTES = 2 * 1024 * 1024;
 
 @Component({
   imports: [CurrencyPipe, DatePipe],
@@ -49,6 +52,27 @@ export class ProgrammingPage {
   protected readonly editedDay = signal('');
   protected readonly editedTime = signal('');
   protected readonly editedPrice = signal(0);
+
+  // US 5.6: the form of a new movie, folded until the manager opens it
+  protected readonly movieFormOpen = signal(false);
+  protected readonly title = signal('');
+  protected readonly synopsis = signal('');
+  protected readonly durationMinutes = signal(0);
+  protected readonly releaseDate = signal('');
+  protected readonly genre = signal('');
+  protected readonly poster = signal<File | null>(null);
+  protected readonly movieError = signal<string | null>(null);
+  /** The title of the movie just added, shown until the next one. */
+  protected readonly addedMovie = signal<string | null>(null);
+  protected readonly movieReady = computed(
+    () =>
+      this.title().trim() !== '' &&
+      this.synopsis().trim() !== '' &&
+      this.durationMinutes() > 0 &&
+      this.releaseDate() !== '' &&
+      this.genre() !== '' &&
+      this.poster() !== null,
+  );
 
   constructor() {
     this.load();
@@ -122,6 +146,57 @@ export class ProgrammingPage {
     const change = this.pending();
     this.pending.set(null);
     change?.confirm();
+  }
+
+  protected openMovieForm(): void {
+    this.title.set('');
+    this.synopsis.set('');
+    this.durationMinutes.set(0);
+    this.releaseDate.set('');
+    this.genre.set('');
+    this.poster.set(null);
+    this.movieError.set(null);
+    this.addedMovie.set(null);
+    this.movieFormOpen.set(true);
+  }
+
+  /** Comfort only: the API checks the poster again, from its first bytes. */
+  protected choosePoster(file: File | undefined): void {
+    this.movieError.set(null);
+    if (file && file.size > MAX_POSTER_BYTES) {
+      this.poster.set(null);
+      this.movieError.set("L'affiche pèse plus de 2 Mo : choisissez une image plus légère.");
+      return;
+    }
+    this.poster.set(file ?? null);
+  }
+
+  protected addMovie(): void {
+    const poster = this.poster();
+    if (!poster) {
+      return;
+    }
+    const title = this.title().trim();
+    this.movieError.set(null);
+    this.programmingService
+      .createMovie({
+        title,
+        synopsis: this.synopsis().trim(),
+        durationMinutes: this.durationMinutes(),
+        genre: this.genre(),
+        releaseDate: this.releaseDate(),
+        poster,
+      })
+      .subscribe({
+        next: ({ movieId }) => {
+          // Criterion 1: the new movie is offered, and already chosen, for the next screening
+          this.movieId.set(movieId);
+          this.addedMovie.set(title);
+          this.movieFormOpen.set(false);
+          this.load(this.programming()?.date);
+        },
+        error: (error: unknown) => this.movieError.set(problemMessage(error)),
+      });
   }
 
   /**

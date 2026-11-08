@@ -56,8 +56,8 @@ Les écrans publics ont été maquettés dans Figma **avant** le développement,
 
 Le front appelle toujours l'API par des chemins **relatifs** (`/api/schedule`), jamais par une adresse en dur, et aucun fichier d'environnement ne contient d'adresse d'API.
 
-- **En local**, le serveur de développement d'Angular redirige `/api/...` vers l'API (`http://localhost:5073`), grâce à `proxy.conf.json`.
-- **Sur la recette et en production**, CloudFront oriente `/api/*` vers l'API et le reste vers les fichiers du front sur S3.
+- **En local**, le serveur de développement d'Angular redirige `/api/...` vers l'API (`http://localhost:5073`), grâce à `proxy.conf.json`. Il redirige aussi `/posters/...` (US 5.6) : les affiches des films ajoutés par le responsable sont servies, en local, par l'API depuis son dossier `posters-dev/`.
+- **Sur la recette et en production**, CloudFront oriente `/api/*` vers l'API, `/posters/*` vers le bucket S3 privé des affiches, et le reste vers les fichiers du front sur S3.
 
 Le navigateur ne voit donc qu'une seule adresse : aucune configuration CORS n'est nécessaire, ni côté front, ni côté API.
 
@@ -147,7 +147,7 @@ src/
         ├── cinema/         présentation des salles (section statique de l'accueil)
         ├── movies/         US 1.1 : films à l'affiche (/movies), fiche d'un film et ses séances (/movies/:id)
         ├── reservations/   US 2.3, 3.1 et 3.2 : formulaire de réservation (fiche d'un film), page du blocage (/reservations/:id) : compte à rebours, « Annuler », conditions générales de vente et « Payer », paiement confirmé, puis le billet ; ticket-qr-code/ : QR code du billet en SVG
-        ├── programming/    US 5.2 : programmation pour le responsable (/programming) : ajouter, déplacer, annuler des séances
+        ├── programming/    US 5.2 et 5.6 : programmation pour le responsable (/programming) : ajouter, déplacer, annuler des séances ; ajouter un film au catalogue, avec son affiche
         ├── ticket-check/   US 4.1 : contrôle des billets (/ticket-check), pour le contrôleur : choix de la séance, caméra (ticket-scanner/, lecture par QrFrameReader) ou saisie du code, verdict vert ou rouge
         ├── tracking/       US 5.3 et 5.1 : suivi des réservations (/tracking), pour le responsable et le caissier : par séance, places vendues, bloquées, restantes et taux de remplissage
         ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
@@ -202,6 +202,7 @@ public/
 | US 3.1 | Conditions générales de vente (`/terms-of-sale`), liées depuis la page du blocage et le pied de page | — | ✅ |
 | US 5.1 | Suivi au guichet : le caissier ouvre le suivi des réservations (`/tracking`, lien « Réservations » dans l'en-tête et le menu du téléphone), en lecture seule : par séance, places vendues en ligne et restantes ; ni lien « Programmation » ni accès à `/programming` ; l'accueil et les films le ramènent au suivi (07/11/2026) | `GET /api/reservation-tracking?date=` | ✅ |
 | US 5.2 | Programmation (`/programming`, réservée au responsable, lien « Programmation » dans l'en-tête) : séances d'un jour avec places prises sur la capacité, « Commencée » ou « Terminée » ; ajout d'une séance (film, salle, heure, prix) dans un formulaire qui reste visible à droite ; modification de l'heure et du prix, annulation ; avertissement avec « Confirmer » quand des places sont bloquées ou vendues ; messages sous la séance ou sous le formulaire concerné | `GET /api/programming`, `POST /api/programming/screenings`, `PUT` et `DELETE /api/programming/screenings/{id}` | ✅ |
+| US 5.6 | Ajouter un film, dans la page Programmation : « Ajouter un film au catalogue » ouvre un formulaire (titre, synopsis, durée, date de sortie, genre choisi dans la liste donnée par l'API, fichier de l'affiche en JPEG, PNG ou WebP) ; une affiche de plus de 2 Mo est refusée dès son choix, sans appel ; une fois le film ajouté, il est déjà choisi dans « Nouvelle séance » ; message pour un film déjà au catalogue. La modification d'un film est à venir | `GET /api/programming` (`genres`), `POST /api/programming/movies` (`multipart/form-data`) | En cours |
 | US 5.3 | Suivi des réservations (`/tracking`, réservé au responsable et au caissier, lien « Réservations » dans l'en-tête et le menu du téléphone) : pour chaque séance d'un jour, places vendues (en ligne, au guichet), bloquées, restantes, capacité et taux de remplissage avec une barre ; total de la journée en tête | `GET /api/reservation-tracking?date=` | ✅ |
 | Droits par rôle | Chaque rôle n'ouvre que ses pages : le caissier et le contrôleur sont renvoyés de l'accueil et des films vers leur page ; achat proposé seulement à un visiteur ou un spectateur (en-tête, fiche d'un film), le responsable garde l'accueil sans acheter (décision du Product Owner, 07/11/2026) | `POST /api/reservations` (`403` pour le personnel) | ✅ |
 

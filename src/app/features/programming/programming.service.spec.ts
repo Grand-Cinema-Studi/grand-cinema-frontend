@@ -54,4 +54,36 @@ describe('US 5.2 – ProgrammingService', () => {
     cancelled.flush(null);
     http.verify();
   });
+
+  it('when a movie is added, then POST /api/programming/movies is called with a multipart form holding the poster', () => {
+    const { http, service } = setUp();
+    const poster = new File([new Uint8Array(10)], 'minuit.png', { type: 'image/png' });
+    let created: { movieId: string } | undefined;
+
+    service
+      .createMovie({
+        title: 'Autour de minuit',
+        synopsis: 'Paris, 1959.',
+        durationMinutes: 133,
+        genre: 'Drame',
+        releaseDate: '1986-10-03',
+        poster,
+      })
+      .subscribe((result) => (created = result));
+
+    const request = http.expectOne('/api/programming/movies');
+    expect(request.request.method).toBe('POST');
+    // A form, not JSON: the browser writes the content type and its boundary itself
+    const form = request.request.body as FormData;
+    expect(form).toBeInstanceOf(FormData);
+    expect(form.get('title')).toBe('Autour de minuit');
+    expect(form.get('synopsis')).toBe('Paris, 1959.');
+    expect(form.get('durationMinutes')).toBe('133');
+    expect(form.get('genre')).toBe('Drame');
+    expect(form.get('releaseDate')).toBe('1986-10-03');
+    expect((form.get('poster') as File).name).toBe('minuit.png');
+    request.flush({ movieId: 'id-new' });
+    expect(created).toEqual({ movieId: 'id-new' });
+    http.verify();
+  });
 });

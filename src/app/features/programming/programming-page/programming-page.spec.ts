@@ -31,6 +31,7 @@ function day(date: string, takenSeats = 0): Programming {
       { roomId: 'id-salle-1', name: 'Salle 1', capacity: 170 },
       { roomId: 'id-salle-2', name: 'Salle 2', capacity: 300 },
     ],
+    genres: ['Biopic', 'Drame', 'Science-fiction'],
   };
 }
 

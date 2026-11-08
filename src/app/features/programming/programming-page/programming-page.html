@@ -42,7 +42,7 @@
             >
               <option value="">Choisir un film</option>
               @for (movie of current.movies; track movie.movieId) {
-                <option [value]="movie.movieId">
+                <option [value]="movie.movieId" [selected]="movie.movieId === movieId()">
                   {{ movie.title }} ({{ movie.durationMinutes }} min)
                 </option>
               }
@@ -97,6 +97,124 @@
         </form>
         @if (addError(); as message) {
           <p role="alert" class="text-sm text-brand">{{ message }}</p>
+        }
+        @if (addedMovie(); as added) {
+          <p role="status" class="text-sm">
+            « {{ added }} » est au catalogue : il est choisi pour la nouvelle séance.
+          </p>
+        }
+        @if (movieFormOpen()) {
+          <form
+            name="new-movie"
+            (submit)="$event.preventDefault(); addMovie()"
+            class="flex flex-col gap-4 rounded-[3px] border border-line bg-surface p-4"
+          >
+            <h2 class="text-[11px] font-semibold uppercase">Nouveau film</h2>
+            <label class="flex flex-col gap-1.5">
+              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                >Titre</span
+              >
+              <input
+                type="text"
+                name="title"
+                maxlength="200"
+                (input)="title.set($any($event.target).value)"
+                class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+              />
+            </label>
+            <label class="flex flex-col gap-1.5">
+              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                >Synopsis</span
+              >
+              <textarea
+                name="synopsis"
+                rows="4"
+                maxlength="2000"
+                (input)="synopsis.set($any($event.target).value)"
+                class="rounded-[3px] border border-line bg-transparent px-3 py-2 text-sm"
+              ></textarea>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="flex flex-col gap-1.5">
+                <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                  >Durée (min)</span
+                >
+                <input
+                  type="number"
+                  name="durationMinutes"
+                  min="1"
+                  max="600"
+                  (input)="durationMinutes.set(+$any($event.target).value)"
+                  class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+                />
+              </label>
+              <label class="flex flex-col gap-1.5">
+                <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                  >Sortie</span
+                >
+                <input
+                  type="date"
+                  name="releaseDate"
+                  (input)="releaseDate.set($any($event.target).value)"
+                  class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+                />
+              </label>
+            </div>
+            <label class="flex flex-col gap-1.5">
+              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                >Genre</span
+              >
+              <select
+                name="genre"
+                (change)="genre.set($any($event.target).value)"
+                class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
+              >
+                <option value="">Choisir un genre</option>
+                @for (name of current.genres; track name) {
+                  <option [value]="name">{{ name }}</option>
+                }
+              </select>
+            </label>
+            <label class="flex flex-col gap-1.5">
+              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                >Affiche (JPEG, PNG ou WebP, 2 Mo au plus)</span
+              >
+              <input
+                type="file"
+                name="poster"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="choosePoster($any($event.target).files?.[0])"
+                class="text-sm file:mr-3 file:h-11 file:rounded-[3px] file:border file:border-line file:bg-transparent file:px-4 file:text-[13px] file:font-semibold file:text-current"
+              />
+            </label>
+            @if (movieError(); as message) {
+              <p role="alert" class="text-sm text-brand">{{ message }}</p>
+            }
+            <div class="flex gap-3">
+              <button
+                type="submit"
+                [disabled]="!movieReady()"
+                class="h-11 rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
+              >
+                Ajouter le film
+              </button>
+              <button
+                type="button"
+                (click)="movieFormOpen.set(false)"
+                class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+              >
+                Fermer
+              </button>
+            </div>
+          </form>
+        } @else {
+          <button
+            type="button"
+            (click)="openMovieForm()"
+            class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+          >
+            Ajouter un film au catalogue
+          </button>
         }
       </aside>
 

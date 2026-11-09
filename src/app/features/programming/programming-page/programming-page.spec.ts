@@ -65,6 +65,8 @@ describe('US 5.2 – ProgrammingPage', () => {
       updateScreening?: () => Observable<void>;
       cancelScreening?: (id: string, confirmed: boolean) => Observable<void>;
       createMovie?: () => Observable<{ movieId: string }>;
+      updateMovie?: () => Observable<void>;
+      archiveMovie?: () => Observable<void>;
     } = {},
   ) {
     const service = {
@@ -73,6 +75,8 @@ describe('US 5.2 – ProgrammingPage', () => {
       updateScreening: vi.fn(options.updateScreening ?? (() => of(undefined))),
       cancelScreening: vi.fn(options.cancelScreening ?? (() => of(undefined))),
       createMovie: vi.fn(options.createMovie ?? (() => of({ movieId: 'id-movie-new' }))),
+      updateMovie: vi.fn(options.updateMovie ?? (() => of(undefined))),
+      archiveMovie: vi.fn(options.archiveMovie ?? (() => of(undefined))),
     };
     TestBed.configureTestingModule({
       providers: [provideRouter([]), { provide: ProgrammingService, useValue: service }],
@@ -309,6 +313,86 @@ describe('US 5.2 – ProgrammingPage', () => {
 
       expect(form.querySelector('[role="alert"]')?.textContent).toContain('déjà au catalogue');
       expect(element.querySelector('[role="status"]')).toBeNull();
+    });
+  });
+
+  describe('US 5.6 – edit and archive a movie', () => {
+    async function openBird(options: Parameters<typeof render>[0] = {}) {
+      const page = await render(options);
+      await page.fill(page.element.querySelector('aside')!, 'movieToEdit', 'id-movie-bird');
+      const form = page.element.querySelector<HTMLFormElement>('form[name="edit-movie"]')!;
+      return { ...page, form };
+    }
+
+    it('when a movie of the catalog is chosen, then its form is filled with its card', async () => {
+      const { form } = await openBird();
+      const value = (name: string) =>
+        form.querySelector<HTMLInputElement>(`[name="${name}"]`)?.value;
+
+      expect(form.querySelector('h2')?.textContent).toContain('Bird');
+      expect(value('title')).toBe('Bird');
+      expect(value('synopsis')).toBe('Charlie Parker');
+      expect(value('durationMinutes')).toBe('161');
+      expect(value('releaseDate')).toBe('1988-09-30');
+      expect(value('genre')).toBe('Biopic');
+      // The current poster: a file field cannot be filled in
+      expect(form.querySelector('img')?.getAttribute('src')).toBe('/posters/bird.png');
+    });
+
+    it('when the card is saved, then the api receives the movie and its fields without a poster, and the day is read again', async () => {
+      const { element, service, form, fill, fixture } = await openBird();
+      await fill(form, 'title', ' Bird, version restaurée ');
+      await fill(form, 'genre', 'Drame');
+
+      form.dispatchEvent(new Event('submit'));
+      await fixture.whenStable();
+
+      expect(service.updateMovie).toHaveBeenCalledWith('id-movie-bird', {
+        title: 'Bird, version restaurée',
+        synopsis: 'Charlie Parker',
+        durationMinutes: 161,
+        genre: 'Drame',
+        releaseDate: '1988-09-30',
+        poster: null,
+      });
+      expect(service.getProgramming).toHaveBeenLastCalledWith('2032-03-15');
+      expect(element.querySelector('[role="status"]')?.textContent).toContain(
+        'Bird, version restaurée',
+      );
+      expect(element.querySelector('form[name="edit-movie"]')).toBeNull();
+    });
+
+    it('when a movie is archived after confirmation, then the api archives it and a message says so', async () => {
+      const { element, service, click } = await openBird();
+
+      await click('Archiver ce film');
+
+      // Criterion 6: nothing is sent before the confirmation
+      expect(service.archiveMovie).not.toHaveBeenCalled();
+      expect(
+        element
+          .querySelector('form[name="edit-movie"] [role="alertdialog"]')
+          ?.textContent?.replace(/\s+/g, ' '),
+      ).toContain('plus proposé à la programmation');
+
+      await click("Confirmer l'archivage");
+
+      expect(service.archiveMovie).toHaveBeenCalledWith('id-movie-bird');
+      expect(element.querySelector('[role="status"]')?.textContent).toContain(
+        '« Bird » est archivé',
+      );
+      expect(service.getProgramming).toHaveBeenLastCalledWith('2032-03-15');
+    });
+
+    it('when a screening of the movie has not ended, then the french message is shown in its form', async () => {
+      const { form, click } = await openBird({
+        archiveMovie: () => conflict('/errors/movie-has-screenings'),
+      });
+
+      await click('Archiver ce film');
+      await click("Confirmer l'archivage");
+
+      expect(form.querySelector('[role="alert"]')?.textContent).toContain("n'est pas terminée");
     });
   });
 });

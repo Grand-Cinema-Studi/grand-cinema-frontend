@@ -29,24 +29,17 @@ export class ProgrammingService {
    * the browser writes it with the boundary between the fields.
    */
   createMovie(request: CreateMovieRequest): Observable<{ movieId: string }> {
-    const form = new FormData();
-    form.append('title', request.title);
-    form.append('synopsis', request.synopsis);
-    form.append('durationMinutes', String(request.durationMinutes));
-    form.append('genre', request.genre);
-    form.append('releaseDate', request.releaseDate);
-    form.append('poster', request.poster);
-    return this.http.post<{ movieId: string }>('/api/programming/movies', form);
+    return this.http.post<{ movieId: string }>('/api/programming/movies', movieForm(request));
   }
 
   /** US 5.6: the same form as createMovie; without a new poster, the poster does not change. */
   updateMovie(movieId: string, request: UpdateMovieRequest): Observable<void> {
-    throw new Error(`Step 25b: ${movieId} ${request.title}`);
+    return this.http.put<void>(`/api/programming/movies/${movieId}`, movieForm(request));
   }
 
   /** US 5.6: never deleted; 409 "movie-has-screenings" while a screening of the movie has not ended. */
   archiveMovie(movieId: string): Observable<void> {
-    throw new Error(`Step 25b: ${movieId}`);
+    return this.http.post<void>(`/api/programming/movies/${movieId}/archive`, null);
   }
 
   /** 409 "screening-has-reservations" while seats are taken and the change is not confirmed. */
@@ -70,4 +63,18 @@ export class ProgrammingService {
 
 function confirmation(confirmed: boolean): HttpParams | undefined {
   return confirmed ? new HttpParams().set('confirmed', 'true') : undefined;
+}
+
+/** The fields of a movie; the poster only when there is one. */
+function movieForm(request: CreateMovieRequest | UpdateMovieRequest): FormData {
+  const form = new FormData();
+  form.append('title', request.title);
+  form.append('synopsis', request.synopsis);
+  form.append('durationMinutes', String(request.durationMinutes));
+  form.append('genre', request.genre);
+  form.append('releaseDate', request.releaseDate);
+  if (request.poster) {
+    form.append('poster', request.poster);
+  }
+  return form;
 }

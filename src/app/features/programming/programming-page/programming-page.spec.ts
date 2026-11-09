@@ -24,8 +24,24 @@ function day(date: string, takenSeats = 0): Programming {
       },
     ],
     movies: [
-      { movieId: 'id-movie-bird', title: 'Bird', durationMinutes: 161 },
-      { movieId: 'id-movie-metropolis', title: 'Metropolis', durationMinutes: 153 },
+      {
+        movieId: 'id-movie-bird',
+        title: 'Bird',
+        durationMinutes: 161,
+        synopsis: 'Charlie Parker',
+        genre: 'Biopic',
+        releaseDate: '1988-09-30',
+        posterUrl: '/posters/bird.png',
+      },
+      {
+        movieId: 'id-movie-metropolis',
+        title: 'Metropolis',
+        durationMinutes: 153,
+        synopsis: 'Fritz Lang',
+        genre: 'Science-fiction',
+        releaseDate: '1927-01-10',
+        posterUrl: '/posters/metropolis.png',
+      },
     ],
     rooms: [
       { roomId: 'id-salle-1', name: 'Salle 1', capacity: 170 },
@@ -230,6 +246,10 @@ describe('US 5.2 – ProgrammingPage', () => {
         movieId: 'id-movie-new',
         title: 'Autour de minuit',
         durationMinutes: 133,
+        synopsis: 'Paris, 1959.',
+        genre: 'Drame',
+        releaseDate: '1986-10-03',
+        posterUrl: '/posters/minuit.png',
       });
       service.getProgramming.mockReturnValue(of(withNewMovie));
 

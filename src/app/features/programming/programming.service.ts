@@ -5,6 +5,7 @@ import {
   CreateMovieRequest,
   CreateScreeningRequest,
   Programming,
+  UpdateMovieRequest,
   UpdateScreeningRequest,
 } from './models/programming';
 
@@ -36,6 +37,16 @@ export class ProgrammingService {
     form.append('releaseDate', request.releaseDate);
     form.append('poster', request.poster);
     return this.http.post<{ movieId: string }>('/api/programming/movies', form);
+  }
+
+  /** US 5.6: the same form as createMovie; without a new poster, the poster does not change. */
+  updateMovie(movieId: string, request: UpdateMovieRequest): Observable<void> {
+    throw new Error(`Step 25b: ${movieId} ${request.title}`);
+  }
+
+  /** US 5.6: never deleted; 409 "movie-has-screenings" while a screening of the movie has not ended. */
+  archiveMovie(movieId: string): Observable<void> {
+    throw new Error(`Step 25b: ${movieId}`);
   }
 
   /** 409 "screening-has-reservations" while seats are taken and the change is not confirmed. */

@@ -27,6 +27,11 @@ const messages = new Map<string, string>([
     '/errors/movie-already-exists',
     'Ce film est déjà au catalogue (même titre et même date de sortie).',
   ],
+  ['/errors/movie-archived', 'Ce film est archivé : il ne peut plus être modifié ni programmé.'],
+  [
+    '/errors/movie-has-screenings',
+    "Une séance de ce film n'est pas terminée : annulez-la ou attendez sa fin pour changer sa durée ou archiver le film.",
+  ],
 ]);
 
 const unavailable = 'Le service est momentanément indisponible. Réessayez dans quelques instants.';

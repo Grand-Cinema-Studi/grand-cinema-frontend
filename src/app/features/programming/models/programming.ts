@@ -17,6 +17,12 @@ export interface ProgrammingMovie {
   movieId: string;
   title: string;
   durationMinutes: number;
+  /** US 5.6: the whole card, for the form that edits it. */
+  synopsis: string;
+  genre: string;
+  /** "1988-09-30". */
+  releaseDate: string;
+  posterUrl: string;
 }
 
 export interface ProgrammingRoom {
@@ -59,4 +65,9 @@ export interface CreateMovieRequest {
   releaseDate: string;
   /** JPEG, PNG or WebP, 2 MB at most: the API reads its first bytes. */
   poster: File;
+}
+
+/** US 5.6: the fields of CreateMovieRequest; without a new poster (null), the poster does not change. */
+export interface UpdateMovieRequest extends Omit<CreateMovieRequest, 'poster'> {
+  poster: File | null;
 }

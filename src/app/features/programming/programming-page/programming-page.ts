@@ -62,8 +62,12 @@ export class ProgrammingPage {
   protected readonly genre = signal('');
   protected readonly poster = signal<File | null>(null);
   protected readonly movieError = signal<string | null>(null);
-  /** The title of the movie just added, shown until the next one. */
-  protected readonly addedMovie = signal<string | null>(null);
+  /** The movie being edited; null for a new movie. */
+  protected readonly editedMovie = signal<ProgrammingMovie | null>(null);
+  /** The archiving waits for a confirmation, in the form. */
+  protected readonly confirmingArchive = signal(false);
+  /** What happened to the last movie added, saved or archived. */
+  protected readonly movieMessage = signal<string | null>(null);
   protected readonly movieReady = computed(
     () =>
       this.title().trim() !== '' &&
@@ -71,7 +75,7 @@ export class ProgrammingPage {
       this.durationMinutes() > 0 &&
       this.releaseDate() !== '' &&
       this.genre() !== '' &&
-      this.poster() !== null,
+      (this.poster() !== null || this.editedMovie() !== null),
   );
 
   constructor() {
@@ -156,8 +160,34 @@ export class ProgrammingPage {
     this.genre.set('');
     this.poster.set(null);
     this.movieError.set(null);
-    this.addedMovie.set(null);
+    this.movieMessage.set(null);
+    this.editedMovie.set(null);
+    this.confirmingArchive.set(false);
     this.movieFormOpen.set(true);
+  }
+
+  /** Criterion 3: the form of a new movie, filled with the card of the chosen one. */
+  protected chooseMovieToEdit(movieId: string): void {
+    const movie = this.programming()?.movies.find((candidate) => candidate.movieId === movieId);
+    if (!movie) {
+      return;
+    }
+    this.openMovieForm();
+    this.editedMovie.set(movie);
+    this.title.set(movie.title);
+    this.synopsis.set(movie.synopsis);
+    this.durationMinutes.set(movie.durationMinutes);
+    this.releaseDate.set(movie.releaseDate);
+    this.genre.set(movie.genre);
+  }
+
+  protected submitMovie(): void {
+    const movie = this.editedMovie();
+    if (movie) {
+      this.saveMovie(movie);
+    } else {
+      this.addMovie();
+    }
   }
 
   /** Comfort only: the API checks the poster again, from its first bytes. */
@@ -191,12 +221,62 @@ export class ProgrammingPage {
         next: ({ movieId }) => {
           // Criterion 1: the new movie is offered, and already chosen, for the next screening
           this.movieId.set(movieId);
-          this.addedMovie.set(title);
+          this.movieMessage.set(
+            `« ${title} » est au catalogue : il est choisi pour la nouvelle séance.`,
+          );
           this.movieFormOpen.set(false);
           this.load(this.programming()?.date);
         },
         error: (error: unknown) => this.movieError.set(problemMessage(error)),
       });
+  }
+
+  /** Without a new poster, the API keeps the current one. */
+  private saveMovie(movie: ProgrammingMovie): void {
+    const title = this.title().trim();
+    this.movieError.set(null);
+    this.programmingService
+      .updateMovie(movie.movieId, {
+        title,
+        synopsis: this.synopsis().trim(),
+        durationMinutes: this.durationMinutes(),
+        genre: this.genre(),
+        releaseDate: this.releaseDate(),
+        poster: this.poster(),
+      })
+      .subscribe({
+        next: () => this.movieDone(`« ${title} » est enregistré.`),
+        error: (error: unknown) => this.movieError.set(problemMessage(error)),
+      });
+  }
+
+  /** Criterion 6: once confirmed, the movie is archived, never deleted. */
+  protected archiveMovie(): void {
+    const movie = this.editedMovie();
+    if (!movie) {
+      return;
+    }
+    this.confirmingArchive.set(false);
+    this.movieError.set(null);
+    this.programmingService.archiveMovie(movie.movieId).subscribe({
+      next: () => {
+        // No longer offered: it leaves the form of a new screening too
+        if (this.movieId() === movie.movieId) {
+          this.movieId.set('');
+        }
+        this.movieDone(
+          `« ${movie.title} » est archivé : il n'est plus proposé à la programmation.`,
+        );
+      },
+      error: (error: unknown) => this.movieError.set(problemMessage(error)),
+    });
+  }
+
+  private movieDone(message: string): void {
+    this.movieMessage.set(message);
+    this.movieFormOpen.set(false);
+    this.editedMovie.set(null);
+    this.load(this.programming()?.date);
   }
 
   /**

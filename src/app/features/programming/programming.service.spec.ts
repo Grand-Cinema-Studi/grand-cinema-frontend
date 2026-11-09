@@ -86,4 +86,41 @@ describe('US 5.2 – ProgrammingService', () => {
     expect(created).toEqual({ movieId: 'id-new' });
     http.verify();
   });
+
+  it('when a movie is edited without a new poster, then PUT /api/programming/movies/{id} is called with a form without the poster', () => {
+    const { http, service } = setUp();
+
+    service
+      .updateMovie('id-bird', {
+        title: 'Bird',
+        synopsis: 'Charlie Parker.',
+        durationMinutes: 161,
+        genre: 'Biopic',
+        releaseDate: '1988-09-30',
+        poster: null,
+      })
+      .subscribe();
+
+    const request = http.expectOne('/api/programming/movies/id-bird');
+    expect(request.request.method).toBe('PUT');
+    const form = request.request.body as FormData;
+    expect(form.get('title')).toBe('Bird');
+    expect(form.get('durationMinutes')).toBe('161');
+    expect(form.get('genre')).toBe('Biopic');
+    // No file: the API keeps the poster
+    expect(form.has('poster')).toBe(false);
+    request.flush(null);
+    http.verify();
+  });
+
+  it('when a movie is archived, then POST /api/programming/movies/{id}/archive is called', () => {
+    const { http, service } = setUp();
+
+    service.archiveMovie('id-bird').subscribe();
+
+    const request = http.expectOne('/api/programming/movies/id-bird/archive');
+    expect(request.request.method).toBe('POST');
+    request.flush(null);
+    http.verify();
+  });
 });

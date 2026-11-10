@@ -58,6 +58,18 @@ const minuit = new File([new Uint8Array(10)], 'minuit.png', { type: 'image/png' 
 describe('US 5.2 – ProgrammingPage', () => {
   afterEach(() => vi.useRealTimers());
 
+  // A-13: jsdom has no modal window. showModal and close only change the open state and send "close",
+  // as a browser does; what the window looks like is checked by hand.
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+      this.open = false;
+      this.dispatchEvent(new Event('close'));
+    };
+  });
+
   async function render(
     options: {
       programming?: Programming;
@@ -393,6 +405,57 @@ describe('US 5.2 – ProgrammingPage', () => {
       await click("Confirmer l'archivage");
 
       expect(form.querySelector('[role="alert"]')?.textContent).toContain("n'est pas terminée");
+    });
+  });
+
+  describe('A-13 – the movie form in a modal window', () => {
+    it('when the form of a new movie opens, then it shows in a modal window titled by its heading', async () => {
+      const page = await render();
+
+      await page.click('Ajouter un film au catalogue');
+
+      const dialog = page.element.querySelector<HTMLDialogElement>('dialog')!;
+      expect(dialog.open).toBe(true);
+      expect(dialog.querySelector('form[name="new-movie"]')).not.toBeNull();
+      const heading = page.element.querySelector(`#${dialog.getAttribute('aria-labelledby')}`);
+      expect(heading?.textContent).toContain('Nouveau film');
+    });
+
+    it('when the window is closed by the Escape key, then the form is closed and opens again empty', async () => {
+      const page = await render();
+      await page.click('Ajouter un film au catalogue');
+      await page.fill(page.element.querySelector('form[name="new-movie"]')!, 'title', 'Brouillon');
+      const dialog = page.element.querySelector<HTMLDialogElement>('dialog')!;
+
+      // What the browser does on Escape: it closes the window, then sends "close"
+      dialog.close();
+      await page.fixture.whenStable();
+
+      expect(page.element.querySelector('form[name="new-movie"]')).toBeNull();
+      await page.click('Ajouter un film au catalogue');
+      expect(
+        page.element.querySelector<HTMLInputElement>('form[name="new-movie"] [name="title"]')
+          ?.value,
+      ).toBe('');
+    });
+
+    it('when a movie is chosen, then its window opens, the list is ready for another choice, and the window closes once the movie is saved', async () => {
+      const page = await render();
+      const aside = page.element.querySelector('aside')!;
+
+      await page.fill(aside, 'movieToEdit', 'id-movie-bird');
+
+      const dialog = page.element.querySelector<HTMLDialogElement>('dialog')!;
+      expect(dialog.open).toBe(true);
+      expect(aside.querySelector<HTMLSelectElement>('[name="movieToEdit"]')?.value).toBe('');
+
+      page.element.querySelector('form[name="edit-movie"]')!.dispatchEvent(new Event('submit'));
+      await page.fixture.whenStable();
+
+      expect(dialog.open).toBe(false);
+      expect(page.element.querySelector('[role="status"]')?.textContent).toContain(
+        '« Bird » est enregistré.',
+      );
     });
   });
 });

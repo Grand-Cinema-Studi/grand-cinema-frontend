@@ -48,7 +48,7 @@ describe('US 2.1 – SignInPage', () => {
       await fixture.whenStable();
     };
 
-    return { auth, navigate, element, signInAs };
+    return { auth, navigate, element, signInAs, fixture };
   }
 
   it('when the email and the password are right, then the visitor is signed in and the account page opens', async () => {
@@ -101,5 +101,25 @@ describe('US 2.1 – SignInPage', () => {
     const link = page.element.querySelector<HTMLAnchorElement>('a[href^="/sign-up"]');
     const query = new URLSearchParams(link?.getAttribute('href')?.split('?')[1]);
     expect(query.get('returnUrl')).toBe('/movies/id-bird?screening=id-screening');
+  });
+
+  it('when the visitor shows the password, then it is displayed in clear, and hidden again on a second click', async () => {
+    const page = await render(() => of(lea));
+    const password = page.element.querySelector<HTMLInputElement>('#password')!;
+    const toggle = page.element.querySelector<HTMLButtonElement>(
+      'button[aria-controls="password"]',
+    )!;
+
+    toggle.click();
+    await page.fixture.whenStable();
+
+    expect(password.type).toBe('text');
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+
+    toggle.click();
+    await page.fixture.whenStable();
+
+    expect(password.type).toBe('password');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
   });
 });

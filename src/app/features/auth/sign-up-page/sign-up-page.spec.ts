@@ -49,13 +49,14 @@ describe('US 2.1 – SignUpPage', () => {
       fill('lastName', 'Martin');
       fill('email', 'lea.martin@example.com');
       fill('password', 'Correct-horse-2026');
+      fill('confirmPassword', 'Correct-horse-2026');
     };
     const submit = async () => {
       element.querySelector('form')!.dispatchEvent(new Event('submit'));
       await fixture.whenStable();
     };
 
-    return { auth, navigate, element, fill, fillValidForm, submit };
+    return { auth, navigate, element, fill, fillValidForm, submit, fixture };
   }
 
   it('when the privacy policy is not accepted, then no account is created and the visitor is asked to accept it', async () => {
@@ -132,5 +133,39 @@ describe('US 2.1 – SignUpPage', () => {
     await page.submit();
 
     expect(page.navigate).toHaveBeenCalledWith('/movies/id-bird?screening=id-screening');
+  });
+
+  it('when the visitor shows the password, then only this field is displayed in clear', async () => {
+    const page = await render(() => of(lea));
+
+    page.element.querySelector<HTMLButtonElement>('button[aria-controls="password"]')!.click();
+    await page.fixture.whenStable();
+
+    expect(page.element.querySelector<HTMLInputElement>('#password')!.type).toBe('text');
+    expect(page.element.querySelector<HTMLInputElement>('#confirmPassword')!.type).toBe('password');
+  });
+
+  it('when the confirmation differs from the password, then no account is created and the difference is shown', async () => {
+    const page = await render(() => of(lea));
+    page.fillValidForm();
+    page.fill('confirmPassword', 'Correct-horse-2027');
+    page.element.querySelector<HTMLInputElement>('#acceptPrivacyPolicy')!.click();
+
+    await page.submit();
+
+    expect(page.auth.register).not.toHaveBeenCalled();
+    expect(page.element.textContent).toContain('Les deux mots de passe ne sont pas identiques.');
+  });
+
+  it('when the confirmation is empty, then no account is created and the visitor is asked to confirm the password', async () => {
+    const page = await render(() => of(lea));
+    page.fillValidForm();
+    page.fill('confirmPassword', '');
+    page.element.querySelector<HTMLInputElement>('#acceptPrivacyPolicy')!.click();
+
+    await page.submit();
+
+    expect(page.auth.register).not.toHaveBeenCalled();
+    expect(page.element.textContent).toContain('Confirmez votre mot de passe.');
   });
 });

@@ -331,17 +331,18 @@ describe('US 5.2 – ProgrammingPage', () => {
   describe('US 5.6 – edit and archive a movie', () => {
     async function openBird(options: Parameters<typeof render>[0] = {}) {
       const page = await render(options);
-      await page.fill(page.element.querySelector('aside')!, 'movieToEdit', 'id-movie-bird');
+      await page.click('Modifier un film du catalogue');
+      await page.fill(page.element.querySelector('dialog')!, 'movieToEdit', 'id-movie-bird');
       const form = page.element.querySelector<HTMLFormElement>('form[name="edit-movie"]')!;
       return { ...page, form };
     }
 
     it('when a movie of the catalog is chosen, then its form is filled with its card', async () => {
-      const { form } = await openBird();
+      const { element, form } = await openBird();
       const value = (name: string) =>
         form.querySelector<HTMLInputElement>(`[name="${name}"]`)?.value;
 
-      expect(form.querySelector('h2')?.textContent).toContain('Bird');
+      expect(element.querySelector('dialog h2')?.textContent).toContain('Bird');
       expect(value('title')).toBe('Bird');
       expect(value('synopsis')).toBe('Charlie Parker');
       expect(value('durationMinutes')).toBe('161');
@@ -439,17 +440,41 @@ describe('US 5.2 – ProgrammingPage', () => {
       ).toBe('');
     });
 
-    it('when a movie is chosen, then its window opens, the list is ready for another choice, and the window closes once the movie is saved', async () => {
+    it('when the page opens, then the two catalog buttons are above the title, and the list of movies is in the window only', async () => {
       const page = await render();
-      const aside = page.element.querySelector('aside')!;
+      const title = page.element.querySelector('h1')!;
+      const button = (label: string) =>
+        Array.from(page.element.querySelectorAll('button')).find(
+          (candidate) => candidate.textContent?.trim() === label,
+        );
 
-      await page.fill(aside, 'movieToEdit', 'id-movie-bird');
+      for (const label of ['Ajouter un film au catalogue', 'Modifier un film du catalogue']) {
+        expect(
+          button(label)!.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+      }
+      expect(page.element.querySelector('[name="movieToEdit"]')).toBeNull();
+    });
+
+    it('when « Modifier un film du catalogue » is pressed, then the window lists the catalog, and closes once the chosen movie is saved', async () => {
+      const page = await render();
+
+      await page.click('Modifier un film du catalogue');
 
       const dialog = page.element.querySelector<HTMLDialogElement>('dialog')!;
       expect(dialog.open).toBe(true);
-      expect(aside.querySelector<HTMLSelectElement>('[name="movieToEdit"]')?.value).toBe('');
+      expect(dialog.querySelector('#movie-form-title')?.textContent).toContain(
+        'Modifier un film du catalogue',
+      );
+      const movies = Array.from(dialog.querySelectorAll('[name="movieToEdit"] option')).map(
+        (option) => option.textContent?.trim(),
+      );
+      expect(movies).toEqual(['Choisir un film', 'Bird', 'Metropolis']);
+      // No form until a movie is chosen
+      expect(dialog.querySelector('form')).toBeNull();
 
-      page.element.querySelector('form[name="edit-movie"]')!.dispatchEvent(new Event('submit'));
+      await page.fill(dialog, 'movieToEdit', 'id-movie-bird');
+      dialog.querySelector('form[name="edit-movie"]')!.dispatchEvent(new Event('submit'));
       await page.fixture.whenStable();
 
       expect(dialog.open).toBe(false);

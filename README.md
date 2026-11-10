@@ -141,6 +141,7 @@ src/
     ├── shared/             réutilisé par plusieurs écrans
     │   ├── movie-card/     carte d'un film (affiche, titre, genre, durée), lien vers sa fiche
     │   ├── paginator/      pagination des listes (6 films par page)
+    │   ├── password-toggle/ bouton œil d'un champ mot de passe (connexion, inscription) : affiche ou masque le mot de passe, bouton bascule accessible (aria-pressed)
     │   └── runtime.pipe.ts durée d'un film (« 2h 06m »)
     └── features/           un dossier par fonctionnalité
         ├── schedule/       US 1.1 et 2.2 : accueil (/) : films à la une, recherche de séance, programmation d'un jour (« Autre date » jusqu'à un an), pastille de séance avec les places restantes, lien vers la réservation (partagée avec la fiche d'un film)
@@ -150,7 +151,7 @@ src/
         ├── programming/    US 5.2 et 5.6 : programmation pour le responsable (/programming) : ajouter, déplacer, annuler des séances ; ajouter, modifier et archiver un film du catalogue, avec son affiche
         ├── ticket-check/   US 4.1 : contrôle des billets (/ticket-check), pour le contrôleur : choix de la séance, caméra (ticket-scanner/, lecture par QrFrameReader) ou saisie du code, verdict vert ou rouge
         ├── tracking/       US 5.3 et 5.1 : suivi des réservations (/tracking), pour le responsable et le caissier : par séance, places vendues, bloquées, restantes et taux de remplissage
-        ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in)
+        ├── auth/           US 2.1 : créer un compte (/sign-up), se connecter (/sign-in) ; afficher le mot de passe, le confirmer à l'inscription
         ├── account/        US 2.1 et 3.2 : mon compte (/account) : profil, mes billets, déconnexion, suppression du compte
         └── legal/          US 2.1, 3.1 et 1.2 : politique de confidentialité (/privacy-policy), conditions générales de vente (/terms-of-sale), mentions légales (/legal-notice)
 public/
@@ -188,8 +189,8 @@ public/
 | US 1.1 | Accueil : champ « Autre date », d'aujourd'hui à un an plus tard (réservation longtemps à l'avance) | `GET /api/schedule?date=` | ✅ |
 | US 1.2 | Bandeau des cookies à la première visite : « Tout refuser » et « Tout accepter », de même style ; la page reste lisible et utilisable dessous, refuser n'empêche ni de consulter ni de réserver ; choix gardé 6 mois, « Cookies » en pied de page le rouvre | — | ✅ |
 | US 1.2 | Mentions légales (`/legal-notice`), liées depuis le pied de page : éditeur, directeur de la publication, hébergeur (AWS, région de Paris), paiement (Stripe), conception, propriété intellectuelle ; texte de démonstration, à valider par la direction | — | ✅ |
-| US 2.1 | Créer un compte (`/sign-up`) : prénom, nom, adresse e-mail, mot de passe de 12 caractères au moins, acceptation obligatoire de la politique de confidentialité | `POST /api/users` | ✅ |
-| US 2.1 | Se connecter (`/sign-in`), puis retour à la page demandée | `POST /api/tokens` | ✅ |
+| US 2.1 | Créer un compte (`/sign-up`) : prénom, nom, adresse e-mail, mot de passe de 12 caractères au moins, saisi deux fois (« Confirmer le mot de passe » : les deux saisies doivent être identiques ; la confirmation reste dans le navigateur, l'API reçoit le mot de passe une fois), acceptation obligatoire de la politique de confidentialité ; un bouton œil dans chaque champ affiche ou masque le mot de passe | `POST /api/users` | ✅ |
+| US 2.1 | Se connecter (`/sign-in`), puis retour à la page demandée ; un bouton œil affiche ou masque le mot de passe | `POST /api/tokens` | ✅ |
 | US 2.1 | Mon compte (`/account`, réservé aux utilisateurs connectés) : profil, déconnexion, suppression du compte après confirmation | `GET /api/users/me`, `DELETE /api/users/me` | ✅ |
 | US 2.1 | Politique de confidentialité (`/privacy-policy`), liée depuis l'inscription et le pied de page | — | ✅ |
 | US 2.1 | En-tête : « Connexion », ou prénom de l'utilisateur une fois connecté ; sur téléphone, ces liens passent dans un menu (bouton à trois traits) | — | ✅ |

@@ -4,9 +4,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { safeReturnUrl } from '../../../core/auth/return-url';
 import { problemMessage } from '../../../core/errors/problem-message';
+import { PasswordToggle } from '../../../shared/password-toggle/password-toggle';
 
 @Component({
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PasswordToggle],
   selector: 'app-sign-in-page',
   templateUrl: './sign-in-page.html',
 })
@@ -22,6 +23,8 @@ export class SignInPage {
 
   protected readonly sending = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** A-07: the password is hidden until the visitor asks to see it. */
+  protected readonly passwordVisible = signal(false);
 
   protected submit(): void {
     if (this.form.invalid) {

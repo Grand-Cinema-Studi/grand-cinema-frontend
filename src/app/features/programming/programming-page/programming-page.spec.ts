@@ -58,6 +58,18 @@ const minuit = new File([new Uint8Array(10)], 'minuit.png', { type: 'image/png' 
 describe('US 5.2 – ProgrammingPage', () => {
   afterEach(() => vi.useRealTimers());
 
+  // A-13: jsdom has no modal window. showModal and close only change the open state and send "close",
+  // as a browser does; what the window looks like is checked by hand.
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+      this.open = false;
+      this.dispatchEvent(new Event('close'));
+    };
+  });
+
   async function render(
     options: {
       programming?: Programming;
@@ -319,17 +331,18 @@ describe('US 5.2 – ProgrammingPage', () => {
   describe('US 5.6 – edit and archive a movie', () => {
     async function openBird(options: Parameters<typeof render>[0] = {}) {
       const page = await render(options);
-      await page.fill(page.element.querySelector('aside')!, 'movieToEdit', 'id-movie-bird');
+      await page.click('Modifier un film du catalogue');
+      await page.fill(page.element.querySelector('dialog')!, 'movieToEdit', 'id-movie-bird');
       const form = page.element.querySelector<HTMLFormElement>('form[name="edit-movie"]')!;
       return { ...page, form };
     }
 
     it('when a movie of the catalog is chosen, then its form is filled with its card', async () => {
-      const { form } = await openBird();
+      const { element, form } = await openBird();
       const value = (name: string) =>
         form.querySelector<HTMLInputElement>(`[name="${name}"]`)?.value;
 
-      expect(form.querySelector('h2')?.textContent).toContain('Bird');
+      expect(element.querySelector('dialog h2')?.textContent).toContain('Bird');
       expect(value('title')).toBe('Bird');
       expect(value('synopsis')).toBe('Charlie Parker');
       expect(value('durationMinutes')).toBe('161');
@@ -393,6 +406,81 @@ describe('US 5.2 – ProgrammingPage', () => {
       await click("Confirmer l'archivage");
 
       expect(form.querySelector('[role="alert"]')?.textContent).toContain("n'est pas terminée");
+    });
+  });
+
+  describe('A-13 – the movie form in a modal window', () => {
+    it('when the form of a new movie opens, then it shows in a modal window titled by its heading', async () => {
+      const page = await render();
+
+      await page.click('Ajouter un film au catalogue');
+
+      const dialog = page.element.querySelector<HTMLDialogElement>('dialog')!;
+      expect(dialog.open).toBe(true);
+      expect(dialog.querySelector('form[name="new-movie"]')).not.toBeNull();
+      const heading = page.element.querySelector(`#${dialog.getAttribute('aria-labelledby')}`);
+      expect(heading?.textContent).toContain('Nouveau film');
+    });
+
+    it('when the window is closed by the Escape key, then the form is closed and opens again empty', async () => {
+      const page = await render();
+      await page.click('Ajouter un film au catalogue');
+      await page.fill(page.element.querySelector('form[name="new-movie"]')!, 'title', 'Brouillon');
+      const dialog = page.element.querySelector<HTMLDialogElement>('dialog')!;
+
+      // What the browser does on Escape: it closes the window, then sends "close"
+      dialog.close();
+      await page.fixture.whenStable();
+
+      expect(page.element.querySelector('form[name="new-movie"]')).toBeNull();
+      await page.click('Ajouter un film au catalogue');
+      expect(
+        page.element.querySelector<HTMLInputElement>('form[name="new-movie"] [name="title"]')
+          ?.value,
+      ).toBe('');
+    });
+
+    it('when the page opens, then the two catalog buttons are above the title, and the list of movies is in the window only', async () => {
+      const page = await render();
+      const title = page.element.querySelector('h1')!;
+      const button = (label: string) =>
+        Array.from(page.element.querySelectorAll('button')).find(
+          (candidate) => candidate.textContent?.trim() === label,
+        );
+
+      for (const label of ['Ajouter un film au catalogue', 'Modifier un film du catalogue']) {
+        expect(
+          button(label)!.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+      }
+      expect(page.element.querySelector('[name="movieToEdit"]')).toBeNull();
+    });
+
+    it('when « Modifier un film du catalogue » is pressed, then the window lists the catalog, and closes once the chosen movie is saved', async () => {
+      const page = await render();
+
+      await page.click('Modifier un film du catalogue');
+
+      const dialog = page.element.querySelector<HTMLDialogElement>('dialog')!;
+      expect(dialog.open).toBe(true);
+      expect(dialog.querySelector('#movie-form-title')?.textContent).toContain(
+        'Modifier un film du catalogue',
+      );
+      const movies = Array.from(dialog.querySelectorAll('[name="movieToEdit"] option')).map(
+        (option) => option.textContent?.trim(),
+      );
+      expect(movies).toEqual(['Choisir un film', 'Bird', 'Metropolis']);
+      // No form until a movie is chosen
+      expect(dialog.querySelector('form')).toBeNull();
+
+      await page.fill(dialog, 'movieToEdit', 'id-movie-bird');
+      dialog.querySelector('form[name="edit-movie"]')!.dispatchEvent(new Event('submit'));
+      await page.fixture.whenStable();
+
+      expect(dialog.open).toBe(false);
+      expect(page.element.querySelector('[role="status"]')?.textContent).toContain(
+        '« Bird » est enregistré.',
+      );
     });
   });
 });

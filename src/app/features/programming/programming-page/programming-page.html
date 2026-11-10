@@ -1,4 +1,28 @@
 <section class="mx-auto flex w-full max-w-360 flex-col gap-8 px-5 py-10 md:px-16 md:py-15">
+  @if (programming()) {
+    <!-- The catalog of movies, apart from the screenings of the day: each button opens the window -->
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          (click)="openMovieForm()"
+          class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+        >
+          Ajouter un film au catalogue
+        </button>
+        <button
+          type="button"
+          (click)="openMovieChoice()"
+          class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+        >
+          Modifier un film du catalogue
+        </button>
+      </div>
+      @if (movieMessage(); as message) {
+        <p role="status" class="text-sm">{{ message }}</p>
+      }
+    </div>
+  }
   <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
     <h1 class="font-display text-5xl leading-none uppercase md:text-7xl">Programmation</h1>
     @if (programming(); as current) {
@@ -98,193 +122,210 @@
         @if (addError(); as message) {
           <p role="alert" class="text-sm text-brand">{{ message }}</p>
         }
-        @if (movieMessage(); as message) {
-          <p role="status" class="text-sm">{{ message }}</p>
-        }
-        @if (movieFormOpen()) {
-          <form
-            [attr.name]="editedMovie() ? 'edit-movie' : 'new-movie'"
-            (submit)="$event.preventDefault(); submitMovie()"
-            class="flex flex-col gap-4 rounded-[3px] border border-line bg-surface p-4"
-          >
-            @if (editedMovie(); as edited) {
-              <h2 class="text-[11px] font-semibold uppercase">Modifier « {{ edited.title }} »</h2>
-            } @else {
-              <h2 class="text-[11px] font-semibold uppercase">Nouveau film</h2>
-            }
-            <label class="flex flex-col gap-1.5">
-              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
-                >Titre</span
-              >
-              <input
-                type="text"
-                name="title"
-                maxlength="200"
-                [value]="title()"
-                (input)="title.set($any($event.target).value)"
-                class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
-              />
-            </label>
-            <label class="flex flex-col gap-1.5">
-              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
-                >Synopsis</span
-              >
-              <textarea
-                name="synopsis"
-                rows="4"
-                maxlength="2000"
-                [value]="synopsis()"
-                (input)="synopsis.set($any($event.target).value)"
-                class="rounded-[3px] border border-line bg-transparent px-3 py-2 text-sm"
-              ></textarea>
-            </label>
-            <div class="grid grid-cols-2 gap-3">
-              <label class="flex flex-col gap-1.5">
-                <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
-                  >Durée (min)</span
-                >
-                <input
-                  type="number"
-                  name="durationMinutes"
-                  min="1"
-                  max="600"
-                  [value]="durationMinutes() || ''"
-                  (input)="durationMinutes.set(+$any($event.target).value)"
-                  class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
-                />
-              </label>
-              <label class="flex flex-col gap-1.5">
-                <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
-                  >Sortie</span
-                >
-                <input
-                  type="date"
-                  name="releaseDate"
-                  [value]="releaseDate()"
-                  (input)="releaseDate.set($any($event.target).value)"
-                  class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
-                />
-              </label>
-            </div>
-            <label class="flex flex-col gap-1.5">
-              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
-                >Genre</span
-              >
-              <select
-                name="genre"
-                (change)="genre.set($any($event.target).value)"
-                class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
-              >
-                <option value="">Choisir un genre</option>
-                @for (name of current.genres; track name) {
-                  <option [value]="name" [selected]="name === genre()">{{ name }}</option>
-                }
-              </select>
-            </label>
-            <label class="flex flex-col gap-1.5">
-              <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">
-                @if (editedMovie()) {
-                  Nouvelle affiche (facultatif ; JPEG, PNG ou WebP, 2 Mo au plus)
+
+        <!-- A-13: native modal window; the browser keeps the focus inside and closes it on Escape -->
+        <dialog
+          #movieDialog
+          aria-labelledby="movie-form-title"
+          (close)="movieFormOpen.set(false)"
+          class="m-auto max-h-[90dvh] w-[calc(100%-2.5rem)] max-w-lg overflow-y-auto rounded-[3px] border border-line bg-surface p-0 text-cream backdrop:bg-night/80"
+        >
+          @if (movieFormOpen()) {
+            <div class="flex flex-col gap-4 p-5">
+              <h2 id="movie-form-title" class="text-[11px] font-semibold uppercase">
+                @if (editedMovie(); as edited) {
+                  Modifier « {{ edited.title }} »
+                } @else if (editing()) {
+                  Modifier un film du catalogue
                 } @else {
-                  Affiche (JPEG, PNG ou WebP, 2 Mo au plus)
+                  Nouveau film
                 }
-              </span>
-              @if (editedMovie(); as edited) {
-                <img
-                  [src]="edited.posterUrl"
-                  alt=""
-                  class="h-24 w-16 rounded-[3px] bg-night object-cover"
-                />
+              </h2>
+              @if (editing()) {
+                <label class="flex flex-col gap-1.5">
+                  <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                    >Film à modifier</span
+                  >
+                  <select
+                    name="movieToEdit"
+                    (change)="chooseMovieToEdit($any($event.target).value)"
+                    class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
+                  >
+                    <option value="">Choisir un film</option>
+                    @for (movie of current.movies; track movie.movieId) {
+                      <option [value]="movie.movieId">{{ movie.title }}</option>
+                    }
+                  </select>
+                </label>
+                @if (!editedMovie()) {
+                  <button
+                    type="button"
+                    (click)="movieFormOpen.set(false)"
+                    class="h-11 self-start rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+                  >
+                    Fermer
+                  </button>
+                }
               }
-              <input
-                type="file"
-                name="poster"
-                accept="image/jpeg,image/png,image/webp"
-                (change)="choosePoster($any($event.target).files?.[0])"
-                class="text-sm file:mr-3 file:h-11 file:rounded-[3px] file:border file:border-line file:bg-transparent file:px-4 file:text-[13px] file:font-semibold file:text-current"
-              />
-            </label>
-            @if (movieError(); as message) {
-              <p role="alert" class="text-sm text-brand">{{ message }}</p>
-            }
-            <div class="flex gap-3">
-              <button
-                type="submit"
-                [disabled]="!movieReady()"
-                class="h-11 rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
-              >
-                {{ editedMovie() ? 'Enregistrer le film' : 'Ajouter le film' }}
-              </button>
-              <button
-                type="button"
-                (click)="movieFormOpen.set(false)"
-                class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
-              >
-                Fermer
-              </button>
-            </div>
-            @if (editedMovie(); as edited) {
-              @if (confirmingArchive()) {
-                <div
-                  role="alertdialog"
-                  class="flex flex-col gap-3 rounded-[3px] border border-brand p-4"
+              @if (!editing() || editedMovie()) {
+                <form
+                  [attr.name]="editedMovie() ? 'edit-movie' : 'new-movie'"
+                  (submit)="$event.preventDefault(); submitMovie()"
+                  class="flex flex-col gap-4"
                 >
-                  <p class="text-sm">
-                    Archiver « {{ edited.title }} » ? Il ne sera plus proposé à la programmation ;
-                    ses séances passées, ses ventes et ses billets restent.
-                  </p>
+                  <label class="flex flex-col gap-1.5">
+                    <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                      >Titre</span
+                    >
+                    <input
+                      type="text"
+                      name="title"
+                      maxlength="200"
+                      [value]="title()"
+                      (input)="title.set($any($event.target).value)"
+                      class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+                    />
+                  </label>
+                  <label class="flex flex-col gap-1.5">
+                    <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                      >Synopsis</span
+                    >
+                    <textarea
+                      name="synopsis"
+                      rows="4"
+                      maxlength="2000"
+                      [value]="synopsis()"
+                      (input)="synopsis.set($any($event.target).value)"
+                      class="rounded-[3px] border border-line bg-transparent px-3 py-2 text-sm"
+                    ></textarea>
+                  </label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <label class="flex flex-col gap-1.5">
+                      <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                        >Durée (min)</span
+                      >
+                      <input
+                        type="number"
+                        name="durationMinutes"
+                        min="1"
+                        max="600"
+                        [value]="durationMinutes() || ''"
+                        (input)="durationMinutes.set(+$any($event.target).value)"
+                        class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+                      />
+                    </label>
+                    <label class="flex flex-col gap-1.5">
+                      <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                        >Sortie</span
+                      >
+                      <input
+                        type="date"
+                        name="releaseDate"
+                        [value]="releaseDate()"
+                        (input)="releaseDate.set($any($event.target).value)"
+                        class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm"
+                      />
+                    </label>
+                  </div>
+                  <label class="flex flex-col gap-1.5">
+                    <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+                      >Genre</span
+                    >
+                    <select
+                      name="genre"
+                      (change)="genre.set($any($event.target).value)"
+                      class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
+                    >
+                      <option value="">Choisir un genre</option>
+                      @for (name of current.genres; track name) {
+                        <option [value]="name" [selected]="name === genre()">{{ name }}</option>
+                      }
+                    </select>
+                  </label>
+                  <label class="flex flex-col gap-1.5">
+                    <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">
+                      @if (editedMovie()) {
+                        Nouvelle affiche (facultatif ; JPEG, PNG ou WebP, 2 Mo au plus)
+                      } @else {
+                        Affiche (JPEG, PNG ou WebP, 2 Mo au plus)
+                      }
+                    </span>
+                    @if (editedMovie(); as edited) {
+                      <img
+                        [src]="edited.posterUrl"
+                        alt=""
+                        class="h-24 w-16 rounded-[3px] bg-night object-cover"
+                      />
+                    }
+                    <input
+                      type="file"
+                      name="poster"
+                      accept="image/jpeg,image/png,image/webp"
+                      (change)="choosePoster($any($event.target).files?.[0])"
+                      class="text-sm file:mr-3 file:h-11 file:rounded-[3px] file:border file:border-line file:bg-transparent file:px-4 file:text-[13px] file:font-semibold file:text-current"
+                    />
+                  </label>
+                  @if (movieError(); as message) {
+                    <p role="alert" class="text-sm text-brand">{{ message }}</p>
+                  }
                   <div class="flex gap-3">
                     <button
-                      type="button"
-                      (click)="archiveMovie()"
-                      class="h-11 rounded-[3px] bg-brand px-5 text-[13px] font-semibold hover:brightness-110"
+                      type="submit"
+                      [disabled]="!movieReady()"
+                      class="h-11 rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
                     >
-                      Confirmer l'archivage
+                      {{ editedMovie() ? 'Enregistrer le film' : 'Ajouter le film' }}
                     </button>
                     <button
                       type="button"
-                      (click)="confirmingArchive.set(false)"
+                      (click)="movieFormOpen.set(false)"
                       class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
                     >
-                      Ne pas archiver
+                      Fermer
                     </button>
                   </div>
-                </div>
-              } @else {
-                <button
-                  type="button"
-                  (click)="confirmingArchive.set(true)"
-                  class="h-11 self-start rounded-[3px] border border-line px-5 text-[13px] font-semibold"
-                >
-                  Archiver ce film
-                </button>
+                  @if (editedMovie(); as edited) {
+                    @if (confirmingArchive()) {
+                      <div
+                        role="alertdialog"
+                        class="flex flex-col gap-3 rounded-[3px] border border-brand p-4"
+                      >
+                        <p class="text-sm">
+                          Archiver « {{ edited.title }} » ? Il ne sera plus proposé à la
+                          programmation ; ses séances passées, ses ventes et ses billets restent.
+                        </p>
+                        <div class="flex gap-3">
+                          <button
+                            type="button"
+                            (click)="archiveMovie()"
+                            class="h-11 rounded-[3px] bg-brand px-5 text-[13px] font-semibold hover:brightness-110"
+                          >
+                            Confirmer l'archivage
+                          </button>
+                          <button
+                            type="button"
+                            (click)="confirmingArchive.set(false)"
+                            class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+                          >
+                            Ne pas archiver
+                          </button>
+                        </div>
+                      </div>
+                    } @else {
+                      <button
+                        type="button"
+                        (click)="confirmingArchive.set(true)"
+                        class="h-11 self-start rounded-[3px] border border-line px-5 text-[13px] font-semibold"
+                      >
+                        Archiver ce film
+                      </button>
+                    }
+                  }
+                </form>
               }
-            }
-          </form>
-        } @else {
-          <button
-            type="button"
-            (click)="openMovieForm()"
-            class="h-11 rounded-[3px] border border-line px-5 text-[13px] font-semibold"
-          >
-            Ajouter un film au catalogue
-          </button>
-          <label class="flex flex-col gap-1.5">
-            <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
-              >Modifier un film du catalogue</span
-            >
-            <select
-              name="movieToEdit"
-              (change)="chooseMovieToEdit($any($event.target).value)"
-              class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
-            >
-              <option value="">Choisir un film</option>
-              @for (movie of current.movies; track movie.movieId) {
-                <option [value]="movie.movieId">{{ movie.title }}</option>
-              }
-            </select>
-          </label>
-        }
+            </div>
+          }
+        </dialog>
       </aside>
 
       <ul class="flex flex-col gap-3 lg:col-start-1 lg:row-start-1">

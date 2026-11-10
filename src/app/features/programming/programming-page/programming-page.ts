@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Observable } from 'rxjs';
 import { problemMessage } from '../../../core/errors/problem-message';
 import { ProgrammedScreening, Programming, ProgrammingMovie } from '../models/programming';
@@ -64,6 +64,8 @@ export class ProgrammingPage {
   protected readonly movieError = signal<string | null>(null);
   /** The movie being edited; null for a new movie. */
   protected readonly editedMovie = signal<ProgrammingMovie | null>(null);
+  /** « Modifier un film du catalogue »: the window opens on the list of the catalog. */
+  protected readonly editing = signal(false);
   /** The archiving waits for a confirmation, in the form. */
   protected readonly confirmingArchive = signal(false);
   /** What happened to the last movie added, saved or archived. */
@@ -78,8 +80,23 @@ export class ProgrammingPage {
       (this.poster() !== null || this.editedMovie() !== null),
   );
 
+  /** A-13: the movie form opens in a modal window (native dialog: focus kept inside, Escape closes it). */
+  private readonly movieDialog = viewChild<ElementRef<HTMLDialogElement>>('movieDialog');
+
   constructor() {
     this.load();
+    // A-13: the window follows movieFormOpen, whoever changes it (opening, "Fermer", a movie saved or archived)
+    effect(() => {
+      const dialog = this.movieDialog()?.nativeElement;
+      if (!dialog) {
+        return;
+      }
+      if (this.movieFormOpen() && !dialog.open) {
+        dialog.showModal();
+      } else if (!this.movieFormOpen() && dialog.open) {
+        dialog.close();
+      }
+    });
   }
 
   /** Without a date, the API chooses today. */
@@ -152,7 +169,36 @@ export class ProgrammingPage {
     change?.confirm();
   }
 
+  /** « Ajouter un film au catalogue »: the window opens on an empty form. */
   protected openMovieForm(): void {
+    this.resetMovieForm();
+    this.editing.set(false);
+    this.movieFormOpen.set(true);
+  }
+
+  /** « Modifier un film du catalogue »: the window opens on the list of the catalog, without a form yet. */
+  protected openMovieChoice(): void {
+    this.resetMovieForm();
+    this.editing.set(true);
+    this.movieFormOpen.set(true);
+  }
+
+  /** Criterion 3: the form of a new movie, filled with the card of the movie chosen in the window. */
+  protected chooseMovieToEdit(movieId: string): void {
+    this.resetMovieForm();
+    const movie = this.programming()?.movies.find((candidate) => candidate.movieId === movieId);
+    if (!movie) {
+      return;
+    }
+    this.editedMovie.set(movie);
+    this.title.set(movie.title);
+    this.synopsis.set(movie.synopsis);
+    this.durationMinutes.set(movie.durationMinutes);
+    this.releaseDate.set(movie.releaseDate);
+    this.genre.set(movie.genre);
+  }
+
+  private resetMovieForm(): void {
     this.title.set('');
     this.synopsis.set('');
     this.durationMinutes.set(0);
@@ -163,22 +209,6 @@ export class ProgrammingPage {
     this.movieMessage.set(null);
     this.editedMovie.set(null);
     this.confirmingArchive.set(false);
-    this.movieFormOpen.set(true);
-  }
-
-  /** Criterion 3: the form of a new movie, filled with the card of the chosen one. */
-  protected chooseMovieToEdit(movieId: string): void {
-    const movie = this.programming()?.movies.find((candidate) => candidate.movieId === movieId);
-    if (!movie) {
-      return;
-    }
-    this.openMovieForm();
-    this.editedMovie.set(movie);
-    this.title.set(movie.title);
-    this.synopsis.set(movie.synopsis);
-    this.durationMinutes.set(movie.durationMinutes);
-    this.releaseDate.set(movie.releaseDate);
-    this.genre.set(movie.genre);
   }
 
   protected submitMovie(): void {

@@ -1,0 +1,136 @@
+<section class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-5 py-12 md:py-20">
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="text-muted">Chargement de votre réservation…</p>
+    }
+    @case ('failed') {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">
+        Réservation introuvable
+      </h1>
+      <a routerLink="/" class="text-[13px] underline">Retour à l'accueil</a>
+    }
+  }
+
+  @if (reservation(); as reservation) {
+    @if (reservation.status === 'Confirmed') {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">Paiement confirmé</h1>
+      <p role="status" class="text-sm">Votre réservation est enregistrée. Voici votre billet.</p>
+      @if (loadedTicket(); as ticket) {
+        <article
+          data-ticket
+          aria-label="Billet"
+          class="flex flex-col items-center gap-5 rounded-[3px] border border-line p-6 md:flex-row md:items-start"
+        >
+          @if (ticket.screeningCancelled) {
+            <p role="alert" class="text-sm text-brand">
+              Séance annulée : ce billet ne permet plus d'entrer en salle.
+            </p>
+          } @else {
+            <app-ticket-qr-code [code]="ticket.ticketCode" />
+          }
+          <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+            <dt class="text-muted">Film</dt>
+            <dd class="font-semibold">{{ ticket.movieTitle }}</dd>
+            <dt class="text-muted">Séance</dt>
+            <dd>
+              {{ ticket.startsAt | date: 'dd/MM/yyyy' }} à {{ ticket.startsAt | date: 'HH:mm' }}
+            </dd>
+            <dt class="text-muted">Salle</dt>
+            <dd>{{ ticket.roomName }}</dd>
+            <dt class="text-muted">Places</dt>
+            <dd>{{ ticket.seats.length }} places : {{ ticket.seats.join(', ') }}</dd>
+          </dl>
+        </article>
+        <p class="text-xs text-muted">
+          Présentez ce QR code à l'entrée de la salle, sur votre téléphone ou imprimé. Votre billet
+          reste accessible depuis « Mon compte ».
+        </p>
+      } @else if (ticket() === 'failed') {
+        <p role="alert" class="text-sm text-muted">
+          Votre billet est momentanément indisponible ; il reste accessible depuis « Mon compte ».
+        </p>
+      }
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+        <dt class="text-muted">Places</dt>
+        <dd>{{ reservation.seats.join(', ') }}</dd>
+        <dt class="text-muted">Montant payé</dt>
+        <dd>{{ reservation.totalAmount | currency: 'EUR' }}</dd>
+      </dl>
+      <a [routerLink]="['/movies', reservation.movieId]" class="text-[13px] underline">
+        Retour au film
+      </a>
+    } @else if (confirming()) {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">
+        Paiement en cours de confirmation
+      </h1>
+      <p role="status" class="text-muted">
+        Stripe nous confirme votre paiement : cela prend quelques secondes. Si la confirmation
+        tarde, rechargez la page.
+      </p>
+    } @else if (expired()) {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">Places libérées</h1>
+      <p role="alert" class="text-muted">
+        Le délai de 10 minutes est écoulé sans paiement : vos places ont été libérées.
+      </p>
+      <a
+        [routerLink]="['/movies', reservation.movieId]"
+        class="flex h-12.5 items-center self-start rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110"
+      >
+        Choisir une autre séance
+      </a>
+    } @else {
+      <h1 class="font-display text-5xl leading-none uppercase md:text-6xl">
+        Vos places sont bloquées
+      </h1>
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+        <dt class="text-muted">Places</dt>
+        <dd>{{ reservation.seats.join(', ') }}</dd>
+        <dt class="text-muted">Montant</dt>
+        <dd>{{ reservation.totalAmount | currency: 'EUR' }}</dd>
+      </dl>
+      <p class="text-sm">
+        Il vous reste
+        <strong data-countdown class="font-display text-3xl text-brand">{{ countdown() }}</strong>
+        pour payer. Passé ce délai, vos places sont libérées.
+      </p>
+      <label class="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          class="mt-1 size-4 accent-brand"
+          [checked]="termsAccepted()"
+          (change)="acceptTerms($event)"
+        />
+        <span>
+          J'ai lu et j'accepte les
+          <a routerLink="/terms-of-sale" target="_blank" class="underline hover:text-cream"
+            >conditions générales de vente</a
+          >.
+        </span>
+      </label>
+      <div class="flex flex-wrap gap-3">
+        <button
+          type="button"
+          [disabled]="!termsAccepted() || paying()"
+          (click)="pay(reservation)"
+          class="flex h-12.5 items-center justify-center rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60"
+        >
+          Payer
+        </button>
+        <button
+          type="button"
+          [disabled]="cancelling() || paying()"
+          (click)="cancel(reservation)"
+          class="flex h-12.5 items-center justify-center rounded-[3px] border border-line px-6 text-[13px] font-semibold hover:border-cream disabled:opacity-60"
+        >
+          Annuler
+        </button>
+      </div>
+      @if (error(); as message) {
+        <p role="alert" class="text-sm text-brand">{{ message }}</p>
+      }
+      <p class="text-xs text-muted">
+        Paiement sécurisé par Stripe : vos données de carte ne passent jamais par nos serveurs.
+      </p>
+    }
+  }
+</section>

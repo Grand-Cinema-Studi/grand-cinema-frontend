@@ -1,0 +1,2 @@
+# Every text file keeps LF line endings, as Prettier and .editorconfig expect, whatever the Git settings of the workstation
+* text=auto eol=lf

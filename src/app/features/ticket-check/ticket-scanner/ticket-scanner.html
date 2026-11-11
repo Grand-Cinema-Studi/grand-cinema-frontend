@@ -1,0 +1,24 @@
+<div class="flex flex-col gap-2">
+  <!-- muted and playsinline: required by phones to show a live video without sound nor full screen -->
+  <video
+    #video
+    muted
+    playsinline
+    aria-label="Image de la caméra"
+    class="aspect-square w-full max-w-sm rounded-[3px] bg-black object-cover"
+    [class.hidden]="cameraState() === 'unavailable'"
+  ></video>
+  @switch (cameraState()) {
+    @case ('starting') {
+      <p class="text-xs text-muted">Ouverture de la caméra…</p>
+    }
+    @case ('reading') {
+      <p class="text-xs text-muted">Présentez le QR code du billet devant la caméra.</p>
+    }
+    @case ('unavailable') {
+      <p role="alert" class="text-sm text-muted">
+        Caméra indisponible : autorisez-la dans le navigateur, ou saisissez le code du billet.
+      </p>
+    }
+  }
+</div>

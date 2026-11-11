@@ -1,0 +1,9 @@
+<svg
+  role="img"
+  aria-label="QR code du billet"
+  [attr.viewBox]="'0 0 ' + qr().size + ' ' + qr().size"
+  shape-rendering="crispEdges"
+  class="size-56 rounded-[3px] bg-white"
+>
+  <path [attr.d]="qr().path" fill="#000" />
+</svg>

@@ -1,0 +1,104 @@
+<section aria-label="Trouver une séance" class="border-y border-line bg-surface">
+  <div
+    class="mx-auto flex max-w-360 flex-col gap-5 px-5 py-7 md:px-16 xl:flex-row xl:items-center xl:gap-8 xl:py-7.5"
+  >
+    <div class="flex flex-col gap-1.5 xl:w-55 xl:gap-1.25">
+      <h2 class="font-display text-[29px] leading-none xl:text-[27px]">Votre prochaine évasion</h2>
+      <p class="text-xs text-muted xl:whitespace-nowrap">
+        Trouvez votre film, réservez votre place
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-2.5 xl:contents">
+      <div
+        class="flex h-17 flex-col justify-center gap-1.75 rounded-[3px] border border-line px-4 xl:h-auto xl:flex-1 xl:gap-2.25 xl:rounded-none xl:border-y-0 xl:border-r-0 xl:pr-0 xl:pl-6"
+      >
+        <span class="text-[9px] font-semibold text-muted uppercase">Cinéma</span>
+        <span class="text-sm">Grand Cinéma</span>
+      </div>
+
+      <label
+        class="relative flex h-17 flex-col justify-center gap-1.75 rounded-[3px] border border-line px-4 xl:h-auto xl:flex-1 xl:gap-2.25 xl:rounded-none xl:border-y-0 xl:border-r-0 xl:pr-0 xl:pl-6"
+      >
+        <span class="text-[9px] font-semibold text-muted uppercase">Date</span>
+        <select
+          name="day"
+          [value]="selectedDay()"
+          (change)="dayChange.emit($any($event.target).value)"
+          class="w-full appearance-none bg-transparent pr-6 text-sm [&>option]:bg-night"
+        >
+          @for (day of days(); track day; let first = $first) {
+            <option [value]="day" [selected]="day === selectedDay()">
+              @if (first) {
+                Aujourd'hui, {{ day | date: 'd MMMM' | titlecase }}
+              } @else {
+                {{ day | date: 'EEEE d MMMM' | titlecase }}
+              }
+            </option>
+          }
+        </select>
+        <img
+          src="icons/chevron-down-mobile.svg"
+          alt=""
+          width="11.5"
+          height="12.4"
+          class="pointer-events-none absolute right-4 xl:hidden"
+        />
+        <img
+          src="icons/chevron-down.svg"
+          alt=""
+          width="16"
+          height="16"
+          class="pointer-events-none absolute right-0 hidden xl:block"
+        />
+      </label>
+
+      <label
+        class="relative flex h-17 flex-col justify-center gap-1.75 rounded-[3px] border border-line px-4 xl:h-auto xl:flex-1 xl:gap-2.25 xl:rounded-none xl:border-y-0 xl:border-r-0 xl:pr-0 xl:pl-6"
+      >
+        <span class="text-[9px] font-semibold text-muted uppercase">Film</span>
+        <select
+          name="movie"
+          [value]="movieId()"
+          (change)="movieId.set($any($event.target).value)"
+          class="w-full appearance-none truncate bg-transparent pr-6 text-sm [&>option]:bg-night"
+        >
+          <option value="">Choisissez un film</option>
+          @for (movie of movies(); track movie.movieId) {
+            <option [value]="movie.movieId">{{ movie.title }}</option>
+          }
+        </select>
+        <img
+          src="icons/chevron-down-mobile.svg"
+          alt=""
+          width="11.5"
+          height="12.4"
+          class="pointer-events-none absolute right-4 xl:hidden"
+        />
+        <img
+          src="icons/chevron-down.svg"
+          alt=""
+          width="16"
+          height="16"
+          class="pointer-events-none absolute right-0 hidden xl:block"
+        />
+      </label>
+    </div>
+
+    <button
+      type="button"
+      (click)="findScreening()"
+      class="flex h-12.5 shrink-0 items-center justify-center gap-3.5 rounded-[3px] bg-brand px-4.5 text-[13px] font-semibold whitespace-nowrap hover:brightness-110 xl:gap-5 xl:px-6"
+    >
+      Trouver ma séance
+      <img
+        src="icons/action-arrow-mobile.svg"
+        alt=""
+        width="16.5"
+        height="16.5"
+        class="xl:hidden"
+      />
+      <img src="icons/action-arrow.svg" alt="" width="17" height="17" class="hidden xl:block" />
+    </button>
+  </div>
+</section>

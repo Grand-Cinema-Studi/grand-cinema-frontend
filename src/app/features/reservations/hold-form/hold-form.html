@@ -1,0 +1,42 @@
+@let chosen = screening();
+<form
+  (submit)="$event.preventDefault(); hold()"
+  class="flex flex-col gap-3 rounded-[3px] border border-line bg-surface p-4 shadow-[0_-8px_24px_rgba(0,0,0,0.5)] lg:gap-4 lg:p-6 lg:shadow-none"
+>
+  <div class="flex flex-col gap-1">
+    <p class="text-[9px] font-semibold text-muted uppercase md:text-[11px]">Votre séance</p>
+    <p class="text-sm capitalize">{{ chosen.startsAt | date: 'EEEE d MMMM y, HH:mm' }}</p>
+    <p class="text-xs text-muted">
+      {{ chosen.roomName }} · {{ chosen.price | currency: 'EUR' }} la place
+    </p>
+  </div>
+
+  <div class="flex items-end gap-3 lg:flex-col lg:items-stretch lg:gap-4">
+    <label class="flex flex-1 flex-col gap-1.5">
+      <span class="text-[9px] font-semibold text-muted uppercase md:text-[11px]"
+        >Nombre de places</span
+      >
+      <select
+        name="seatCount"
+        (change)="seatCount.set(+$any($event.target).value)"
+        class="h-11 rounded-[3px] border border-line bg-transparent px-3 text-sm [&>option]:bg-night"
+      >
+        @for (count of seatCounts(); track count) {
+          <option [value]="count" [selected]="count === seatCount()">{{ count }}</option>
+        }
+      </select>
+    </label>
+
+    <button
+      type="submit"
+      [disabled]="sending()"
+      class="flex h-11 flex-1 items-center justify-center rounded-[3px] bg-brand px-6 text-[13px] font-semibold hover:brightness-110 disabled:opacity-60 lg:h-12.5 lg:flex-none"
+    >
+      Réserver
+    </button>
+  </div>
+
+  @if (error(); as message) {
+    <p role="alert" class="text-sm text-brand">{{ message }}</p>
+  }
+</form>

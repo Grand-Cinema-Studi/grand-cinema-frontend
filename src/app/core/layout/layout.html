@@ -1,0 +1,244 @@
+<div class="flex min-h-dvh flex-col">
+  <header class="border-b border-line bg-night md:border-white/15">
+    <div
+      class="mx-auto flex h-19 w-full max-w-360 items-center justify-between px-5 md:h-26 md:px-16"
+    >
+      <a
+        routerLink="/"
+        (click)="menuOpen.set(false)"
+        class="font-display text-[32px] leading-none whitespace-nowrap uppercase md:text-[42px]"
+      >
+        Grand Cinéma
+      </a>
+      <!-- Tablet and desktop: the links stay in the header -->
+      <div class="hidden items-center gap-8 md:flex">
+        @if (auth.user(); as user) {
+          @if (user.role === 'Manager') {
+            <a
+              routerLink="/programming"
+              class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+            >
+              Programmation
+            </a>
+          }
+          @if (user.role === 'Manager' || user.role === 'Cashier') {
+            <a
+              routerLink="/tracking"
+              class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+            >
+              Réservations
+            </a>
+          }
+          @if (user.role === 'TicketInspector') {
+            <a
+              routerLink="/ticket-check"
+              class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+            >
+              Contrôle
+            </a>
+          }
+          <a
+            routerLink="/account"
+            [title]="user.firstName"
+            class="block max-w-24 truncate text-[10px] font-semibold uppercase hover:text-muted md:max-w-48 md:text-[13px]"
+          >
+            <span class="sr-only">Mon compte : </span>{{ user.firstName }}
+          </a>
+        } @else {
+          <a
+            routerLink="/sign-in"
+            class="text-[10px] font-semibold whitespace-nowrap uppercase hover:text-muted md:text-[13px]"
+          >
+            Connexion
+          </a>
+        }
+        @if (canBuy()) {
+          <a
+            routerLink="/"
+            class="flex h-11 items-center gap-2.25 rounded-[3px] bg-brand px-3 text-[10px] font-semibold whitespace-nowrap hover:brightness-110 md:h-12.5 md:gap-5 md:px-6 md:text-[13px]"
+          >
+            Acheter un billet
+            <img src="icons/ticket-mobile.svg" alt="" width="15" height="15" class="md:hidden" />
+            <img src="icons/ticket.svg" alt="" width="17" height="17" class="hidden md:block" />
+          </a>
+        }
+      </div>
+      <!-- Phones: a button opens the menu below the header -->
+      <button
+        type="button"
+        aria-controls="mobile-menu"
+        [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="menuOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
+        (click)="menuOpen.set(!menuOpen())"
+        class="flex size-11 items-center justify-center md:hidden"
+      >
+        @if (menuOpen()) {
+          <svg
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        } @else {
+          <svg
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        }
+      </button>
+    </div>
+    @if (menuOpen()) {
+      <nav
+        id="mobile-menu"
+        aria-label="Menu"
+        class="flex flex-col border-t border-line px-5 pt-2 pb-5 md:hidden"
+      >
+        @if (auth.user(); as user) {
+          @if (user.role === 'Manager') {
+            <a
+              routerLink="/programming"
+              (click)="menuOpen.set(false)"
+              class="py-3 text-sm font-semibold uppercase hover:text-muted"
+            >
+              Programmation
+            </a>
+          }
+          @if (user.role === 'Manager' || user.role === 'Cashier') {
+            <a
+              routerLink="/tracking"
+              (click)="menuOpen.set(false)"
+              class="py-3 text-sm font-semibold uppercase hover:text-muted"
+            >
+              Réservations
+            </a>
+          }
+          @if (user.role === 'TicketInspector') {
+            <a
+              routerLink="/ticket-check"
+              (click)="menuOpen.set(false)"
+              class="py-3 text-sm font-semibold uppercase hover:text-muted"
+            >
+              Contrôle
+            </a>
+          }
+          <a
+            routerLink="/account"
+            (click)="menuOpen.set(false)"
+            class="py-3 text-sm font-semibold uppercase hover:text-muted"
+          >
+            Mon compte ({{ user.firstName }})
+          </a>
+        } @else {
+          <a
+            routerLink="/sign-in"
+            (click)="menuOpen.set(false)"
+            class="py-3 text-sm font-semibold uppercase hover:text-muted"
+          >
+            Connexion
+          </a>
+        }
+        @if (canBuy()) {
+          <a
+            routerLink="/"
+            (click)="menuOpen.set(false)"
+            class="mt-3 flex h-11 items-center justify-center gap-2.25 rounded-[3px] bg-brand px-3 text-[13px] font-semibold hover:brightness-110"
+          >
+            Acheter un billet
+            <img src="icons/ticket-mobile.svg" alt="" width="15" height="15" />
+          </a>
+        }
+      </nav>
+    }
+  </header>
+
+  <main class="flex-1">
+    <router-outlet />
+  </main>
+
+  <footer class="bg-night">
+    <div
+      class="mx-auto flex w-full max-w-360 flex-col gap-8 px-5 pt-10 pb-7 md:gap-11 md:px-16 md:pt-15"
+    >
+      <div class="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+        <div class="flex flex-col gap-3 lg:w-105 lg:gap-3.25">
+          <div class="flex items-center justify-between lg:contents">
+            <p
+              class="font-display text-[34px] leading-none whitespace-nowrap uppercase lg:text-[42px]"
+            >
+              Grand Cinéma
+            </p>
+            <p class="flex items-center gap-5 lg:order-last lg:pt-2.5">
+              @for (network of socialNetworks; track network.name) {
+                <img [src]="network.icon" [alt]="network.name" width="18" height="18" />
+              }
+            </p>
+          </div>
+          <p class="text-xs text-muted">Voyez le monde autrement.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-x-5 gap-y-8 lg:contents">
+          @for (group of footerGroups; track group.title) {
+            <section class="flex flex-col gap-4 lg:w-47.5 lg:gap-3.75">
+              <h2 class="text-[10px] font-semibold uppercase">{{ group.title }}</h2>
+              <ul class="flex flex-col gap-4 text-xs text-muted lg:gap-3.75">
+                @for (entry of group.entries; track entry.label) {
+                  <li>
+                    @if (entry.fragment) {
+                      <a routerLink="/" [fragment]="entry.fragment" class="hover:text-cream">
+                        {{ entry.label }}
+                      </a>
+                    } @else {
+                      <!-- Placeholder link: its page does not exist yet -->
+                      <a class="cursor-default">{{ entry.label }}</a>
+                    }
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        </div>
+      </div>
+
+      <div class="h-px bg-line"></div>
+
+      <div class="flex flex-col gap-5 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
+        <ul
+          class="flex flex-wrap justify-between gap-x-4 gap-y-2 text-[9px] text-muted md:order-2 md:gap-6 md:text-[10px]"
+        >
+          @for (mention of legalMentions; track mention.label) {
+            <li>
+              <a [routerLink]="mention.link" class="hover:text-cream">{{ mention.label }}</a>
+            </li>
+          }
+          <li>
+            <button type="button" (click)="consent.reset()" class="hover:text-cream">
+              Cookies
+            </button>
+          </li>
+        </ul>
+        <p class="text-[10px] text-subtle md:order-1">© 2026 Grand Cinéma. Tous droits réservés.</p>
+        <p
+          class="hidden items-center gap-2 justify-self-end text-[10px] text-muted uppercase md:order-3 md:flex"
+        >
+          <span class="size-1.25 bg-brand" aria-hidden="true"></span>
+          Ville Le Grand Cinema
+        </p>
+      </div>
+    </div>
+  </footer>
+  <app-cookie-banner />
+</div>
